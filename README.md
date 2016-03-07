@@ -1,3 +1,10 @@
-## Mechatronics Final Project
+## Mechatronics Lab 6 Project (This branch only)
 
-#UPLOAD ALL CODE + CAD + OTHER FILES HERE!!!!
+TODO
+Check if leds are being set correctly.
+Test in classroom.
+
+
+
+
+
