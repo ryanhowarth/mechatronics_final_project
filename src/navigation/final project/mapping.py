@@ -8,7 +8,6 @@
 
 # tree_lst form: [current node, previous node, largest node index, forward or back]
 def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forward
-    '''tree_lst=[current node, previous node, node index, forward or back]'''
 
     # Check if node is moving forward
     if tree_lst[3]=='f':
@@ -29,7 +28,7 @@ def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forwa
                 dic[tree_lst[0]][0][i]=tree_lst[2]
 
                 # Create child node and add to dictionary           
-                dic[tree_lst[2]]=[[0,0,0],[0,0,0],tree_lst[0], lmrNode(i)]#add node into dictionary, child index, xmas tree flag, parent node, which path
+                dic[tree_lst[2]]=createNode(tree_lst[0],i) 
 
                 # If we haven't determined the next node yet (we only want to do this once)
                 if nextNodeUnset:
@@ -40,33 +39,48 @@ def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forwa
                     # Otherwise, it is a dead end and the next node is actually the parent node
                     else
                         tree_lst[0]=dic[tree_lst[0]][2]
-                        tree_lst[3]='b'#backward
+                        tree_lst[3]='b'
 
-            
-    else: #backward
-        if dic[tree_lst[0]][3]=='N':#current node is the root node
-            tree_lst[3]='e'#end
+    # Otherwise it's moving backward        
+    else:
+        # If root is reached, terminate. This should not happen in real trials
+        if dic[tree_lst[0]][3]=='N':
+            tree_lst[3]='e'
+
+        # Otherwise, continue to navigate
         else:
-            if dic[tree_lst[1]][3]=='R':#back from the right child
-                tree_lst[1]=tree_lst[0]#current node as the previous node
-                tree_lst[0]=dic[tree_lst[0]][2]#set the parent node as the next node
-            elif dic[tree_lst[1]][3]=='M':#back from the middle child
-                tree_lst[1]=tree_lst[0]#current node as the previous node
-                if dic[tree_lst[0]][0][2]:#right child exists
-                    tree_lst[0]=dic[tree_lst[0]][0][2]#set the child node as the next node
-                    tree_lst[3]='f'#forward
-                else:#no right child, go backwards
-                    tree_lst[0]=dic[tree_lst[0]][2]#set the parent node as the next node
-            elif dic[tree_lst[1]][3]=='L':#back from the left child
-                tree_lst[1]=tree_lst[0]#current node as the previous node
-                if dic[tree_lst[0]][0][1]:#middle child exists
-                    tree_lst[0]=dic[tree_lst[0]][0][1]
-                    tree_lst[3]='f'#forward
-                else:#no middle child, only right node
-                    tree_lst[0]=dic[tree_lst[0]][0][2]
-                    tree_lst[3]='f'#forward
-    
 
+            # The old current node becomes the new previous node
+            tree_lst[1]=tree_lst[0]
+
+            # Coming back from the left node, next will be middle or right (both going forward)
+            if dic[tree_lst[1]][3]=='L':
+
+                # If middle exists, go middle
+                if dic[tree_lst[0]][0][1]:
+                    tree_lst[0] = dic[tree_lst[0]][0][1]
+                # Otherwise right must exist, go right
+                else:
+                    tree_lst[0]=dic[tree_lst[0]][0][2]  
+                
+                tree_lst[3]='f' # Go forward for either case
+            
+            # Coming back from middle node, next will be right or backwards
+            elif dic[tree_lst[1]][3]=='M':#back from the middle child
+
+                # If right exists, go right
+                if dic[tree_lst[0]][0][2]:
+                    tree_lst[0]=dic[tree_lst[0]][0][2]
+                    tree_lst[3]='f' # Go forward in this case
+                # Otherwise continue going backwards (to previous parent node)
+                else:
+                    tree_lst[0]=dic[tree_lst[0]][2]    
+
+            # Coming back from right node, continute going backwards (to previous parent node)
+            else:
+                tree_lst[0]=dic[tree_lst[0]][2]
+                                     
+    
 def lmrNode(index):
     if index==0:
         return 'L'
@@ -74,3 +88,6 @@ def lmrNode(index):
         return 'M'
     else:
         return 'R'
+
+def createNode(parent, directionIdx):
+    return [[0,0,0],[0,0,0],parent, lmrNode(directionIdx)]
