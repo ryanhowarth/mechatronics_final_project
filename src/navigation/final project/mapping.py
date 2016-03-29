@@ -1,7 +1,49 @@
 #!/usr/bin/python
-def node_proc(dic, tree_lst, path_lst):#current node, node index, back or forward
+
+# dictionary format
+# dic[X][0] is the children node indices. Index 0 is left, Index 1 is middle, Index 2 is right
+# dic[X][1] is the tree/present flags
+# dic[X][2] is the index of the parent node
+# dic[X][3] is the "L", "M", or "R" of the parent node (possibly redundant)
+
+# tree_lst form: [current node, previous node, largest node index, forward or back]
+def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forward
     '''tree_lst=[current node, previous node, node index, forward or back]'''
-    if tree_lst[3]=='b':#backward
+
+    # Check if node is moving forward
+    if tree_lst[3]=='f':
+
+        # The old current node becomes the new previous node
+        tree_lst[1]=tree_lst[0]
+
+        # Add the child nodes into the dictionary
+        nextNodeUnset = True
+        for i in xrange(3):
+
+            # Check if new direction is detected
+            if path_lst[i]: 
+                # Update node number of node to be added
+                tree_lst[2] += 1 
+
+                # Assign child node to parent node
+                dic[tree_lst[0]][0][i]=tree_lst[2]
+
+                # Create child node and add to dictionary           
+                dic[tree_lst[2]]=[[0,0,0],[0,0,0],tree_lst[0], lmrNode(i)]#add node into dictionary, child index, xmas tree flag, parent node, which path
+
+                # If we haven't determined the next node yet (we only want to do this once)
+                if nextNodeUnset:
+                    # If it's not a dead end, the next node is the left or middle nodes (indices 0 or 1)
+                    if i != 2:
+                        tree_lst[0]=dic[tree_lst[0]][0][i]
+                        nextNodeUnset = False # only assign the next node once
+                    # Otherwise, it is a dead end and the next node is actually the parent node
+                    else
+                        tree_lst[0]=dic[tree_lst[0]][2]
+                        tree_lst[3]='b'#backward
+
+            
+    else: #backward
         if dic[tree_lst[0]][3]=='N':#current node is the root node
             tree_lst[3]='e'#end
         else:
@@ -23,27 +65,12 @@ def node_proc(dic, tree_lst, path_lst):#current node, node index, back or forwar
                 else:#no middle child, only right node
                     tree_lst[0]=dic[tree_lst[0]][0][2]
                     tree_lst[3]='f'#forward
-    elif tree_lst[3]=='f':#forward
-        '''add the child nodes into the dic'''
-        for i in xrange(3):
-            if path_lst[i]:#add child node into the dictionary
-                tree_lst[2]+=1#get the new number of the node
-                dic[tree_lst[0]][0][i]=tree_lst[2]#include the index of every child node
-                dic[tree_lst[2]]=[[0,0,0],[0,0,0],tree_lst[0],'N']#add node into dictionary, child index, xmas tree flag, parent node, which path
-                if i==0:
-                    dic[tree_lst[2]][3]='L'
-                elif i==1:
-                    dic[tree_lst[2]][3]='M'
-                elif i==2:
-                    dic[tree_lst[2]][3]='R'
-        '''decide the next node'''
-        if path_lst[0]:#left child exists
-            tree_lst[1]=tree_lst[0]#set the current node as the previous node
-            tree_lst[0]=dic[tree_lst[0]][0][0]
-        elif path_lst[1]:#no left child, only middle child or m-child & r-child
-            tree_lst[1]=tree_lst[0]
-            tree_lst[0]=dic[tree_lst[0]][0][1]
-        else:#dead end
-            tree_lst[1]=tree_lst[0]
-            tree_lst[0]=dic[tree_lst[0]][2]#set the parent node as the next node
-            tree_lst[3]='b'#backward
+    
+
+def lmrNode(index):
+    if index==0:
+        return 'L'
+    elif index==1:
+        return 'M'
+    else:
+        return 'R'
