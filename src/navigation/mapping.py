@@ -17,6 +17,8 @@ def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forwa
 
         # Add the child nodes into the dictionary
         nextNodeUnset = True
+        nextNode=dic[tree_lst[0]][2]
+        tree_lst[3]='b'
         for i in xrange(3):
 
             # Check if new direction is detected
@@ -34,13 +36,10 @@ def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forwa
                 if nextNodeUnset:
                     # If it's not a dead end, the next node is the left or middle nodes (indices 0 or 1)
                     if i != 2:
-                        tree_lst[0]=dic[tree_lst[0]][0][i]
-                        nextNodeUnset = False # only assign the next node once
-                    # Otherwise, it is a dead end and the next node is actually the parent node
-                    else
-                        tree_lst[0]=dic[tree_lst[0]][2]
-                        tree_lst[3]='b'
-
+                        nextNode = dic[tree_lst[0]][0][i]
+                        tree_lst[3]='f'
+                        nextNodeUnset = False # only assign the next node once           
+        tree_lst[0] = nextNode
     # Otherwise it's moving backward        
     else:
         # If root is reached, terminate. This should not happen in real trials
@@ -51,22 +50,19 @@ def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forwa
         else:
 
             # The old current node becomes the new previous node
-            tree_lst[1]=tree_lst[0]
 
             # Coming back from the left node, next will be middle or right (both going forward)
             if dic[tree_lst[1]][3]=='L':
+                tree_lst[1]=tree_lst[0]
 
-                # If middle exists, go middle
-                if dic[tree_lst[0]][0][1]:
-                    tree_lst[0] = dic[tree_lst[0]][0][1]
-                # Otherwise right must exist, go right
-                else:
-                    tree_lst[0]=dic[tree_lst[0]][0][2]  
+                # If middle exists, current node gets middle. Else, current node gets left
+                tree_lst[0] = dic[tree_lst[0]][0][1] if dic[tree_lst[0]][0][1] else dic[tree_lst[0]][0][2]
                 
                 tree_lst[3]='f' # Go forward for either case
             
             # Coming back from middle node, next will be right or backwards
             elif dic[tree_lst[1]][3]=='M':#back from the middle child
+                tree_lst[1]=tree_lst[0]
 
                 # If right exists, go right
                 if dic[tree_lst[0]][0][2]:
@@ -75,14 +71,15 @@ def node_proc(dic, tree_lst, path_lst): #current node, node index, back or forwa
                 # Otherwise continue going backwards (to previous parent node)
                 else:
                     tree_lst[0]=dic[tree_lst[0]][2]    
-
+                
             # Coming back from right node, continute going backwards (to previous parent node)
             else:
+                tree_lst[1]=tree_lst[0]
                 tree_lst[0]=dic[tree_lst[0]][2]
                                      
     
 def lmrNode(index):
-    if index==0:
+    if index==0:                 
         return 'L'
     elif index==1:
         return 'M'
@@ -90,4 +87,4 @@ def lmrNode(index):
         return 'R'
 
 def createNode(parent, directionIdx):
-    return [[0,0,0],[0,0,0],parent, lmrNode(directionIdx)]
+    return [[0,0,0],[0,0,0], parent, lmrNode(directionIdx)]
