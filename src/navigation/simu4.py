@@ -128,7 +128,7 @@ def frame(robot):
 		binary_out[(tree_coor[0]-2):(tree_coor[0]+3),(tree_coor[1]-2):(tree_coor[1]+3)]=xmas_tree
 	else:
 		binary_out[(tree_coor[0]-2):(tree_coor[0]+3),(tree_coor[1]-2):(tree_coor[1]+3)]=xmas_gift
-	if not got_gift:
+	if not found_gift:
 		binary_out[(gift_coor[0]-2):(gift_coor[0]+3),(gift_coor[1]-2):(gift_coor[1]+3)]=xmas_gift
 	if robot[1]=='U':
 		binary_out[(robot[0][0]-3):(robot[0][0]+4),(robot[0][1]-3):(robot[0][1]+4)]=robot_u
@@ -252,7 +252,7 @@ xmax_tree_color=100
 xmax_gift_color=150
 color(xmas_gift, 255,xmax_gift_color)
 color(xmas_tree, 255,xmax_tree_color)
-got_gift=False
+found_gift=False
 found_tree=False
 dlvd_gift=False
 
@@ -292,15 +292,14 @@ else:
 	path_lst[2]=False
 
 mapping.node_proc(map_dic, tree_lst, path_lst, treeToGiftNodes)
-print map_dic
+mapping.print_node(map_dic)
 
 while True:
-#    time.sleep(0.3)
 	move_f(robot)
 	img=frame(robot)
 	cv2.imshow('maze',img)
 	cv2.waitKey(0)
-	#print 'forward ',robot[0]
+
 	path_lst[1] = True if dect_dist(robot, 'F', maze) > 5 else False
 
 	if turn_left:#ready to turn, turn, finish turning
@@ -317,16 +316,12 @@ while True:
 				if path_lst[1] or path_lst[2]:#if middle path or right path exists, it is an intersection
 
 					mapping.node_proc(map_dic,tree_lst,path_lst, treeToGiftNodes)#add this node into the map_dic or check this node
-					print map_dic
-					print tree_lst
-			
-					if tree_lst[3]=='e':#end
-						break#reach the root node						
+					mapping.print_node(map_dic)
+					
 				img=frame(robot)
 				cv2.imshow('maze',img)
 				cv2.waitKey(0)
 				space_for_turn_left = -5#reset the space as -5 to prevent unnecessary left turn afterwards
-				#print 'turn left'
 
 		else:
 			path_lst[0]=False
@@ -340,14 +335,12 @@ while True:
 
 		#print 'right space ',space_for_turn_right
 			if space_for_turn_right == 9:#robot moves straight, however it is an intersection
-				print tree_lst
+
 				mapping.node_proc(map_dic, tree_lst, path_lst, treeToGiftNodes)#add this node into the map_dic
-				print map_dic
-				print tree_lst
+				mapping.print_node(map_dic)
 
 				space_for_turn_right=0#reset the value
-				if tree_lst[3]=='e':#end
-					break#reach the root node
+
 		else:
 			path_lst[2]=False
 			space_for_turn_right=0
@@ -368,10 +361,8 @@ while True:
 
 				if path_lst[2]:#right path,
 					space_for_turn_right=0
-					#print 'turn right'
 				else:#dead end
 					turn_r(robot)#turn right again
-					#print 'deadend, turn around'
 
 					# Hard code where the tree is. This should be modified later
 					if tree_lst[0] == 3:
@@ -380,24 +371,26 @@ while True:
 						treeNode = 3
 						treeToGiftNodes = {1:tree_lst[0]}
 						tree_lst[4] += 1
+						if found_gift:
+							# drop gift
+							break
 					elif tree_lst[0] == 4:
 						print 'found gift. path:'
 						print treeToGiftNodes
+						if found_tree:
+							break
+						else:
+							#pickup gift
+							pass
 
-
-					#mapping.node_proc(map_dic, tree_lst, path_lst, treeToGiftNodes)#add this node into the map_dic or check this node
-
+					# Swap previous and current nodes to indicate turning around
 					temp = tree_lst[0]
 					tree_lst[0] = tree_lst[1]
 					tree_lst[1] = temp
 					tree_lst[3] = 'b'
-					print 'turn around'
 
-					print map_dic
-					print tree_lst
+					mapping.print_node(map_dic)
 
-					if tree_lst[3]=='e':#end
-						break#reach the root node
 				img=frame(robot)
 				cv2.imshow('maze',img)
 				cv2.waitKey(0)

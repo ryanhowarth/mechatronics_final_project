@@ -103,7 +103,7 @@ def lmrNode(index):
 
 def createNode(parent, directionIdx):
 	return [[0,0,0],[0,0,0], parent, lmrNode(directionIdx)]
-'''
+
 def search_path(dic,tree_lst):#return a list of turns
 	path_idx_dic={'L':0,'M':1,'R':2}
 	cur_node=tree_lst[0]
@@ -138,17 +138,41 @@ def search_path(dic,tree_lst):#return a list of turns
 	#the edge_lst should only contain the path from the present to the tree now
 	turn_lst=[]
 	turn_dic={('R','P'):'L',('M','P'):'M',('L','P'):'R',('R','M'):'R',('R','L'):'M',('M','L'):'R'}
-	for i in xrange(1,len(edge_lst)):
-		if dic[edge_lst[i-1][0]][2]==edge_lst[i-1][1] and dic[edge_lst[i][0]][2]==edge_lst[i][1]:#c->p->p
-			turn=turn_dic[(dic[edge_lst[i-1][0]][3],'P')]
-			turn_lst.append(turn)
-		elif dic[edge_lst[i-1][0]][2]==edge_lst[i-1][1] and dic[edge_lst[i][0]][2]!=edge_lst[i][1]:#c->p->c
-			turn=turn_dic[(dic[edge_lst[i-1][0]][3],dic[edge_lst[i][1]][3])]
-						turn_lst.append(turn)
-		elif dic[edge_lst[i-1][0]][2]!=edge_lst[i-1][1] and dic[edge_lst[i][0]][2]!=edge_lst[i][1]:#p->c->c
-			turn=dic[edge_lst[i][1]][3]
-			turn_lst.append(turn)
+	for i in xrange(0,len(edge_lst)-1):
+		if dic[edge_lst[i][0]][2]==edge_lst[i][1]: 
+			if dic[edge_lst[i+1][0]][2]==edge_lst[i+1][1]:
+				turn=turn_dic[(dic[edge_lst[i][0]][3],'P')]
+			else: #c->p->c
+				turn=turn_dic[(dic[edge_lst[i][0]][3],dic[edge_lst[i+1][1]][3])]
 		else:
-			pass
+			turn=dic[edge_lst[i+1][1]][3]
+		turn_lst.append(turn)
+		
 	return turn_lst
-	'''
+	
+
+def print_node(dic):
+		node_num=len(dic)
+		for i in xrange(1,node_num+1):
+				child_str=''
+				for c in dic[i][0]:
+						if c:
+							child_str+=' '+str(c)
+				if not child_str:
+						child_str='no child nodes'
+				else:
+						child_str='child'+child_str
+				#tree_info_str='no xmas tree'
+				#for i in dic[i][1]:
+				#       if 
+				node_info=' child'
+				if dic[i][3]=='L':
+						node_info='Left'+node_info
+				elif dic[i][3]=='M':
+						node_info='Middle'+node_info
+				elif dic[i][3]=='R':
+						node_info='Right'+node_info
+				else:
+						node_info='Root node'
+
+				print 'node {0}: {1}, parent {2}, {3}'.format(i,child_str,dic[i][2],node_info)
