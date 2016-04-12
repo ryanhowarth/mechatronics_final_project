@@ -83,26 +83,25 @@ def createNode(parent, directionIdx):
 def print_node(dic):
 		node_num=len(dic)
 		for i in xrange(1,node_num+1):
-				node_indx=i
-				child_str=''
+
+				# Print all child nodes to the string (if there are any)
+				child_str = ''
 				for c in dic[i][0]:
-						if c:
-								child_str+=' '+str(c)
-				if not child_str:
-						child_str='no child nodes'
+					if c:
+						child_str += ' #' + str(c)
+				if child_str:
+						child_str = 'Children:' + child_str
 				else:
-						child_str='child'+child_str
-				#tree_info_str='no xmas tree'
-				#for i in dic[i][1]:
-				#       if 
-				node_info=' child'
+						child_str = 'No child nodes'
+
+				# Print node status (left, middle, right from parent node)
 				if dic[i][3]=='L':
-						node_info='Left'+node_info
+						node_info='Left child of node #' + str(dic[i][2])
 				elif dic[i][3]=='M':
-						node_info='Middle'+node_info
+						node_info='Middle child of node #' + str(dic[i][2])
 				elif dic[i][3]=='R':
-						node_info='Right'+node_info
+						node_info='Right child of node #' + str(dic[i][2])
 				else:
 						node_info='Root node'
 
-				print 'node {0}: {1}, parent {2}, {3}'.format(i,child_str,dic[i][2],node_info)
+				print 'node {0}: {1}; {2}'.format(i, child_str, node_info)
