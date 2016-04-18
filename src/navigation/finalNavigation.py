@@ -116,17 +116,17 @@ def update_intersection(irSensors):
     voltsL = irSensors.readADCSingleEnded(0,gain,sps)/1000
     distanceL = irDistLeft(voltsL)
 
-    print distanceL;
+    #print 'left: ' + str(distanceL)
     
     voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
     distanceM = irDistFront(voltsM)
 
-    print distanceM;
+    #print 'front: ' + str(distanceM)
     
     voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
     distanceR = irDistRight(voltsR)
 
-    print distanceR;
+    #print 'right: ' + str(distanceR)
 
     path_lst=[False]*3
 
@@ -188,9 +188,7 @@ treeFound = False
 giftDropped = False
 
 # Initialize sensors
-irSensors = ADS1x15(ic=ADS1015)
-
-''' TODO: Initialize Pixy '''
+irSensors = ADS1x15(ic=0x00)
 
 # Create second node based on initialized tree_lst and path_lst
 mapping.node_proc(map_dic, tree_lst, path_lst)
@@ -202,12 +200,12 @@ while True:
 
     moveRobotForward()
 
-    path_lst = update_intersection(sensorL, sensorM, sensorR)
+    path_lst = update_intersection(irSensors)
 
     # Check if left turn is available
     if path_lst[0]:
         turnRobotLeft()
-
+        
         # If at an intersection, add node to structure
         if path_lst[1] or path_lst[2]:
             mapping.node_proc(map_dic, tree_lst, path_lst)
