@@ -1,33 +1,116 @@
 #!/usr/bin/python
 
 import mapping
-#from Adafruit_ADS1x15 import ADS1x15
+from Adafruit_ADS1x15 import ADS1x15
+import wiringpi as wp
+from time import sleep 
+
+#left motor
+PWM_L = 12  #pin 32 
+INPUT_1_LEFT_MOTOR = 25 #pin 36
+INPUT_2_LEFT_MOTOR = 8 #pin 38
+
+#right motor
+PWM_R = 13 #pin 33
+INPUT_1_RIGHT_MOTOR = 9 #pin 35 
+INPUT_2_RIGHT_MOTOR = 11 #pin 37
+
+PWM_MODE = 2
+INPUT_MODE = 1
+
+wp.wiringPiSetupGpio()
+
+#enable PWM_L
+wp.pinMode(PWM_L, PWM_MODE)  #set pin to pwm mode
+wp.pwmWrite(PWM_L, 0)
+
+#enable PWM_R
+wp.pinMode(PWM_R, PWM_MODE)
+wp.pwmWrite(PWM_R, 0)
+
+#enable pins motor1 -- Lmotor
+wp.pinMode(INPUT_1_LEFT_MOTOR, INPUT_MODE)
+wp.pinMode(INPUT_2_LEFT_MOTOR, INPUT_MODE)
+
+#enable pins motor2 -- Rmotor
+wp.pinMode(INPUT_1_RIGHT_MOTOR, INPUT_MODE)
+wp.pinMode(INPUT_2_RIGHT_MOTOR, INPUT_MODE)
+
+def forwardLmotor():
+    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 1)
+    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 0)
+
+def backwardLmotor():
+    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
+    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 1)
+
+def forwardRmotor():
+    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 1)
+    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
+
+def backwardRmotor():
+    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 0)
+    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 1)
 
 def moveRobotForward():
     # Move robot forward one grid space
-    pass
+    forwardRmotor()
+    forwardLmotor()
+    wp.pwmWrite(PWM_L, 1000)
+    wp.pwmWrite(PWM_R, 1000)
+    sleep(2)
+    wp.pwmWrite(PWM_L, 0)
+    wp.pwmWrite(PWM_R, 0)
+    print 'forward'
 
 def turnRobotLeft():
     # Turn robot 90 degrees left
-    pass
+    forwardRmotor()
+    backwardLmotor()
+    wp.pwmWrite(PWM_L, 1000)
+    wp.pwmWrite(PWM_R, 1000)
+    sleep(2)
+    wp.pwmWrite(PWM_R, 0)
+    wp.pwmWrite(PWM_L, 0)
+    print 'turn left'
 
 def turnRobotRight():
     # Turn robot 90 degrees right
-    pass
+    forwardLmotor()
+    backwardRmotor()
+    wp.pwmWrite(PWM_L, 1000)
+    wp.pwmWrite(PWM_R, 1000)
+    sleep(2)
+    wp.pwmWrite(PWM_L, 0)
+    wp.pwmWrite(PWM_R, 0)
+    print 'turn right'
+
 
 def turnRobotAround():
     # Turn robot 180 degrees when deadend is found
     turnRobotLeft()
     turnRobotLeft()
+    print 'turn around'
+
+def shutoffRobot():
+    wp.pwmWrite(PWM_L, 0)
+    wp.pwmWrite(PWM_R, 0)
+    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 0)
+    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
+    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 0)
+    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
+    print 'turn off'
 
 def update_intersection(sensorL, sensorM, sensorR):
     # Check surroundings for available paths
-
+    '''
     gain = 4096
     sps = 250
 
     voltsL = sensorL.readADCSingleEnded(0,gain,sps)/1000
     distanceL = irDistFunction(voltsL)
+
+    print distanceL
     
     voltsM = sensorM.readADCSingleEnded(1,gain,sps)/1000
     distanceM = irDistFunction(voltsM)
@@ -40,8 +123,9 @@ def update_intersection(sensorL, sensorM, sensorR):
     path_lst[0] = distanceL > 5
     path_lst[1] = distanceM > 5
     path_lst[2] = distanceR > 5
-    
-    return path_lst 
+    '''
+    #return path_lst 
+    return [False]*3
 
 def irDistFunction(volts):
     # Function to calculate distance from sensor input
@@ -76,10 +160,12 @@ treeFound = False
 giftDropped = False
 
 # Initialize sensors
-sensorL=ADS1x15(ic=ADS1015)
-sensorM=ADS1x15(ic=ADS1015)
-sensorR=ADS1x15(ic=ADS1015)
-
+#sensorL=ADS1x15(ic=ADS1015)
+#sensorM=ADS1x15(ic=ADS1015)
+#sensorR=ADS1x15(ic=ADS1015)
+sensorL =0
+sensorM = 0
+sensorR = 0
 ''' TODO: Initialize Pixy '''
 
 # Create second node based on initialized tree_lst and path_lst
