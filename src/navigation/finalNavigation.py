@@ -7,16 +7,20 @@ from time import sleep
 
 #left motor
 PWM_L = 12  #pin 32 
-INPUT_1_LEFT_MOTOR = 25 #pin 36
-INPUT_2_LEFT_MOTOR = 8 #pin 38
+INPUT_1_LEFT_MOTOR = 25 #pin 22
+INPUT_2_LEFT_MOTOR = 8 #pin 24
 
 #right motor
 PWM_R = 13 #pin 33
-INPUT_1_RIGHT_MOTOR = 9 #pin 35 
-INPUT_2_RIGHT_MOTOR = 11 #pin 37
+INPUT_1_RIGHT_MOTOR = 9 #pin 21 
+INPUT_2_RIGHT_MOTOR = 11 #pin 23
 
+GIFT_PIN = 20 #pin 38
+TREE_PIN = 21 #pin 21
+
+INPUT_MODE = 0
+OUTPUT_MODE = 1
 PWM_MODE = 2
-INPUT_MODE = 1
 
 wp.wiringPiSetupGpio()
 
@@ -29,12 +33,15 @@ wp.pinMode(PWM_R, PWM_MODE)
 wp.pwmWrite(PWM_R, 0)
 
 #enable pins motor1 -- Lmotor
-wp.pinMode(INPUT_1_LEFT_MOTOR, INPUT_MODE)
-wp.pinMode(INPUT_2_LEFT_MOTOR, INPUT_MODE)
+wp.pinMode(INPUT_1_LEFT_MOTOR, OUTPUT_MODE)
+wp.pinMode(INPUT_2_LEFT_MOTOR, OUTPUT_MODE)
 
 #enable pins motor2 -- Rmotor
-wp.pinMode(INPUT_1_RIGHT_MOTOR, INPUT_MODE)
-wp.pinMode(INPUT_2_RIGHT_MOTOR, INPUT_MODE)
+wp.pinMode(INPUT_1_RIGHT_MOTOR, OUTPUT_MODE)
+wp.pinMode(INPUT_2_RIGHT_MOTOR, OUTPUT_MODE)
+
+wp.pinMode(GIFT_PIN, INPUT_MODE)
+wp.pinMode(TREE_PIN, INPUT_MODE)
 
 def forwardLmotor():
     wp.digitalWrite(INPUT_1_LEFT_MOTOR, 1)
@@ -101,41 +108,62 @@ def shutoffRobot():
     wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
     print 'turn off'
 
-def update_intersection(sensorL, sensorM, sensorR):
+def update_intersection(irSensors):
     # Check surroundings for available paths
-    '''
     gain = 4096
     sps = 250
 
-    voltsL = sensorL.readADCSingleEnded(0,gain,sps)/1000
-    distanceL = irDistFunction(voltsL)
+    voltsL = irSensors.readADCSingleEnded(0,gain,sps)/1000
+    distanceL = irDistLeft(voltsL)
 
-    print distanceL
+    print distanceL;
     
-    voltsM = sensorM.readADCSingleEnded(1,gain,sps)/1000
-    distanceM = irDistFunction(voltsM)
+    voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
+    distanceM = irDistFront(voltsM)
+
+    print distanceM;
     
-    voltsR = sensorR.readADCSingleEnded(2,gain,sps)/1000
-    distanceR = irDistFunction(voltsR)
+    voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
+    distanceR = irDistRight(voltsR)
+
+    print distanceR;
 
     path_lst=[False]*3
 
-    path_lst[0] = distanceL > 5
-    path_lst[1] = distanceM > 5
-    path_lst[2] = distanceR > 5
-    '''
-    #return path_lst 
-    return [False]*3
+    path_lst[0] = distanceL > 10
+    path_lst[1] = distanceM > 10
+    path_lst[2] = distanceR > 10
+    
+    return path_lst 
 
-def irDistFunction(volts):
-    # Function to calculate distance from sensor input
-    ''' TODO: Calibrate for specific sensor '''
-    return 12.374 * volts**(-1.09)
+''' 
+*** NOTE ***
+Left: Light Green 2Y0A21
+Front: 2D120X
+Right: Dark Green 2Y0A21
+'''
+
+def irDistLeft(volts):
+    # Function to calculate distance from left sensor
+    return 26.453 * volts**(-1.221)
+
+def irDistFront(volts):
+    return 11.721 * volts**(-0.972)
+
+def irDistRight(volts):
+    # Function to calculate distance from right sensor
+    return 26.47 * volts**(-1.185)
 
 def pixyDetectItem():
-    # Insert pixy code here
-    # return 'gift' if gift is detected, 'tree' if tree is detected, else ''
-    return ''
+
+    item = ''
+
+    if digitalRead(TREE_PIN):
+        item = 'tree'
+    elif digitalRead(GIFT_PIN):
+        item = 'gift'
+
+    return item
 
 def pickUpGift():
     # Pick up the gift
@@ -160,12 +188,8 @@ treeFound = False
 giftDropped = False
 
 # Initialize sensors
-#sensorL=ADS1x15(ic=ADS1015)
-#sensorM=ADS1x15(ic=ADS1015)
-#sensorR=ADS1x15(ic=ADS1015)
-sensorL =0
-sensorM = 0
-sensorR = 0
+irSensors = ADS1x15(ic=ADS1015)
+
 ''' TODO: Initialize Pixy '''
 
 # Create second node based on initialized tree_lst and path_lst
