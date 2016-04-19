@@ -1,65 +1,198 @@
 #!/usr/bin/python
 
 import mapping
-#from Adafruit_ADS1x15 import ADS1x15
+from Adafruit_ADS1x15 import ADS1x15
+import wiringpi as wp
+from time import sleep 
+
+#left motor
+PWM_L = 6  #pin 32 
+INPUT_1_LEFT_MOTOR = 25 #pin 22
+INPUT_2_LEFT_MOTOR = 8 #pin 24
+
+#right motor
+PWM_R = 5 #pin 33
+INPUT_1_RIGHT_MOTOR = 9 #pin 21 
+INPUT_2_RIGHT_MOTOR = 11 #pin 23
+
+GIFT_PIN = 20 #pin 38
+TREE_PIN = 21 #pin 21
+
+SERVO_LIFT = 12 #pin 32
+SERVO_PINCH = 13 #pin 33
+LOWER_SERVO = 128
+RAISE_SERVO = 80
+CLOSE_SERVO = 50
+OPEN_SERVO = 100
+
+INPUT_MODE = 0
+OUTPUT_MODE = 1
+PWM_MODE = 2
+
+wp.wiringPiSetupGpio()
+
+#enable PWM_L
+wp.pinMode(PWM_L, PWM_MODE)  #set pin to pwm mode
+wp.pwmWrite(PWM_L, 0)
+
+#enable PWM_R
+wp.pinMode(PWM_R, PWM_MODE)
+wp.pwmWrite(PWM_R, 0)
+
+#enable pins motor1 -- Lmotor
+wp.pinMode(INPUT_1_LEFT_MOTOR, OUTPUT_MODE)
+wp.pinMode(INPUT_2_LEFT_MOTOR, OUTPUT_MODE)
+
+#enable pins motor2 -- Rmotor
+wp.pinMode(INPUT_1_RIGHT_MOTOR, OUTPUT_MODE)
+wp.pinMode(INPUT_2_RIGHT_MOTOR, OUTPUT_MODE)
+
+wp.pinMode(GIFT_PIN, INPUT_MODE)
+wp.pinMode(TREE_PIN, INPUT_MODE)
+
+wp.pinMode(SERVO_LIFT, PWM_MODE)
+wp.pinMode(SERVO_PINCH, PWM_MODE)
+wp.pwmSetMode(0)
+wp.pwmSetClock(400)
+wp.pwmSetRange(1024)
+wp.pwmWrite(SERVO_LIFT, RAISE_SERVO)
+wp.pwmWrite(SERVO_PINCH, CLOSE_SERVO)
+
+def forwardLmotor():
+    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 1)
+    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 0)
+
+def backwardLmotor():
+    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
+    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 1)
+
+def forwardRmotor():
+    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 1)
+    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
+
+def backwardRmotor():
+    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 0)
+    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 1)
 
 def moveRobotForward():
     # Move robot forward one grid space
-    pass
+    forwardRmotor()
+    forwardLmotor()
+    wp.pwmWrite(PWM_L, 1000)
+    wp.pwmWrite(PWM_R, 1000)
+    sleep(2)
+    wp.pwmWrite(PWM_L, 0)
+    wp.pwmWrite(PWM_R, 0)
+    print 'forward'
 
 def turnRobotLeft():
     # Turn robot 90 degrees left
-    pass
+    forwardRmotor()
+    backwardLmotor()
+    wp.pwmWrite(PWM_L, 1000)
+    wp.pwmWrite(PWM_R, 1000)
+    sleep(2)
+    wp.pwmWrite(PWM_R, 0)
+    wp.pwmWrite(PWM_L, 0)
+    print 'turn left'
 
 def turnRobotRight():
     # Turn robot 90 degrees right
-    pass
+    forwardLmotor()
+    backwardRmotor()
+    wp.pwmWrite(PWM_L, 1000)
+    wp.pwmWrite(PWM_R, 1000)
+    sleep(2)
+    wp.pwmWrite(PWM_L, 0)
+    wp.pwmWrite(PWM_R, 0)
+    print 'turn right'
+
 
 def turnRobotAround():
     # Turn robot 180 degrees when deadend is found
     turnRobotLeft()
     turnRobotLeft()
+    print 'turn around'
 
-def update_intersection(sensorL, sensorM, sensorR):
+def shutoffRobot():
+    wp.pwmWrite(PWM_L, 0)
+    wp.pwmWrite(PWM_R, 0)
+    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 0)
+    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
+    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 0)
+    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
+    print 'turn off'
+
+def update_intersection(irSensors):
     # Check surroundings for available paths
-
     gain = 4096
     sps = 250
 
-    voltsL = sensorL.readADCSingleEnded(0,gain,sps)/1000
-    distanceL = irDistFunction(voltsL)
+    voltsL = irSensors.readADCSingleEnded(0,gain,sps)/1000
+    distanceL = irDistLeft(voltsL)
+
+    #print 'left: ' + str(distanceL)
     
-    voltsM = sensorM.readADCSingleEnded(1,gain,sps)/1000
-    distanceM = irDistFunction(voltsM)
+    voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
+    distanceM = irDistFront(voltsM)
+
+    #print 'front: ' + str(distanceM)
     
-    voltsR = sensorR.readADCSingleEnded(2,gain,sps)/1000
-    distanceR = irDistFunction(voltsR)
+    voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
+    distanceR = irDistRight(voltsR)
+
+    #print 'right: ' + str(distanceR)
 
     path_lst=[False]*3
 
-    path_lst[0] = distanceL > 5
-    path_lst[1] = distanceM > 5
-    path_lst[2] = distanceR > 5
+    path_lst[0] = distanceL > 10
+    path_lst[1] = distanceM > 10
+    path_lst[2] = distanceR > 10
     
     return path_lst 
 
-def irDistFunction(volts):
-    # Function to calculate distance from sensor input
-    ''' TODO: Calibrate for specific sensor '''
-    return 12.374 * volts**(-1.09)
+''' 
+*** NOTE ***
+Left: Light Green 2Y0A21
+Front: 2D120X
+Right: Dark Green 2Y0A21
+'''
+
+def irDistLeft(volts):
+    # Function to calculate distance from left sensor
+    return 26.453 * volts**(-1.221)
+
+def irDistFront(volts):
+    return 11.721 * volts**(-0.972)
+
+def irDistRight(volts):
+    # Function to calculate distance from right sensor
+    return 26.47 * volts**(-1.185)
 
 def pixyDetectItem():
-    # Insert pixy code here
-    # return 'gift' if gift is detected, 'tree' if tree is detected, else ''
-    return ''
+
+    item = ''
+
+    if digitalRead(TREE_PIN):
+        item = 'tree'
+    elif digitalRead(GIFT_PIN):
+        item = 'gift'
+
+    return item
 
 def pickUpGift():
-    # Pick up the gift
-    pass
+    wp.pwmWrite(SERVO_PINCH, OPEN_SERVO)
+    wp.pwmWrite(SERVO_LIFT, LOWER_SERVO)
+
+    wp.pwmWrite(SERVO_PINCH, CLOSE_SERVO)
+    wp.pwmWrite(SERVO_LIFT, RAISE_SERVO)
 
 def dropGift():
-    # Drop the gift at the tree
-    pass
+    wp.pwmWrite(SERVO_LIFT, LOWER_SERVO)
+    wp.pwmWrite(SERVO_PINCH, OPEN_SERVO)
+ 
+    wp.pwmWrite(SERVO_LIFT, RAISE_SERVO)
+    wp.pwmWrite(SERVO_PINCH, CLOSE_SERVO)
 
 # Initialize first node
 map_dic={1:[[0,0,0],[0,0,0],0,'N']}
@@ -76,11 +209,7 @@ treeFound = False
 giftDropped = False
 
 # Initialize sensors
-sensorL=ADS1x15(ic=ADS1015)
-sensorM=ADS1x15(ic=ADS1015)
-sensorR=ADS1x15(ic=ADS1015)
-
-''' TODO: Initialize Pixy '''
+irSensors = ADS1x15(ic=0x00)
 
 # Create second node based on initialized tree_lst and path_lst
 mapping.node_proc(map_dic, tree_lst, path_lst)
@@ -92,12 +221,12 @@ while True:
 
     moveRobotForward()
 
-    path_lst = update_intersection(sensorL, sensorM, sensorR)
+    path_lst = update_intersection(irSensors)
 
     # Check if left turn is available
     if path_lst[0]:
         turnRobotLeft()
-
+        
         # If at an intersection, add node to structure
         if path_lst[1] or path_lst[2]:
             mapping.node_proc(map_dic, tree_lst, path_lst)

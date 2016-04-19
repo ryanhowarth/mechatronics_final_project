@@ -1,26 +1,27 @@
 import wiringpi as wp
 from time import sleep
 
-PWM0 = 18 #pin12
-PWM1 = 13 #pin33
-PIN1 = 25 #pin22
-PIN2 = 8 #pin24
-PIN3 = 9 #pin21
-PIN4 = 11 #pin23
+#left pins
+PWM_L = 23 #pin 33
+INPUT1_L = 24 #pin 35
+INPUT2_L = 25 #pin 37
+
+#right pins
+PWM_R = 26 #pin 32
+INPUT1_R = 27 #pin 36
+INPUT2_R = 28 #pin 38 
  
 PWM_MODE = 2
-ON = 1
-OFF = 0
 
 wp.wiringPiSetupGpio()
 
-#enable PWM0
-wp.pinMode(PWM0, PWM_MODE)  #set pin to pwm mode
-wp.pwmWrite(PWM0, OFF)
+#enable PWM_R
+wp.pinMode(PWM_R, PWM_MODE)  #set pin to pwm mode
+wp.pwmWrite(PWM_R, OFF)
 
-#enable PWM1
-wp.pinMode(PWM1, PWM_MODE)
-wp.pwmWrite(PWM1, OFF)
+#enable PWM_L
+wp.pinMode(PWM_L, PWM_MODE)
+wp.pwmWrite(PWM_L, OFF)
 
 #enable pins motor1
 wp.pinMode(PIN1, 1)
@@ -28,6 +29,7 @@ wp.pinMode(PIN2, 1)
 wp.digitalWrite(PIN1, ON)
 wp.digitalWrite(PIN2, OFF)
 
+#enable pins motor2
 wp.pinMode(PIN3,1)
 wp.pinMode(PIN4,1)
 wp.digitalWrite(PIN3, ON)
