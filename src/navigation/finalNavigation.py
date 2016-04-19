@@ -6,17 +6,24 @@ import wiringpi as wp
 from time import sleep 
 
 #left motor
-PWM_L = 12  #pin 32 
+PWM_L = 6  #pin 32 
 INPUT_1_LEFT_MOTOR = 25 #pin 22
 INPUT_2_LEFT_MOTOR = 8 #pin 24
 
 #right motor
-PWM_R = 13 #pin 33
+PWM_R = 5 #pin 33
 INPUT_1_RIGHT_MOTOR = 9 #pin 21 
 INPUT_2_RIGHT_MOTOR = 11 #pin 23
 
 GIFT_PIN = 20 #pin 38
 TREE_PIN = 21 #pin 21
+
+SERVO_LIFT = 12 #pin 32
+SERVO_PINCH = 13 #pin 33
+LOWER_SERVO = 128
+RAISE_SERVO = 80
+CLOSE_SERVO = 50
+OPEN_SERVO = 100
 
 INPUT_MODE = 0
 OUTPUT_MODE = 1
@@ -42,6 +49,14 @@ wp.pinMode(INPUT_2_RIGHT_MOTOR, OUTPUT_MODE)
 
 wp.pinMode(GIFT_PIN, INPUT_MODE)
 wp.pinMode(TREE_PIN, INPUT_MODE)
+
+wp.pinMode(SERVO_LIFT, PWM_MODE)
+wp.pinMode(SERVO_PINCH, PWM_MODE)
+wp.pwmSetMode(0)
+wp.pwmSetClock(400)
+wp.pwmSetRange(1024)
+wp.pwmWrite(SERVO_LIFT, RAISE_SERVO)
+wp.pwmWrite(SERVO_PINCH, CLOSE_SERVO)
 
 def forwardLmotor():
     wp.digitalWrite(INPUT_1_LEFT_MOTOR, 1)
@@ -166,12 +181,18 @@ def pixyDetectItem():
     return item
 
 def pickUpGift():
-    # Pick up the gift
-    pass
+    wp.pwmWrite(SERVO_PINCH, OPEN_SERVO)
+    wp.pwmWrite(SERVO_LIFT, LOWER_SERVO)
+
+    wp.pwmWrite(SERVO_PINCH, CLOSE_SERVO)
+    wp.pwmWrite(SERVO_LIFT, RAISE_SERVO)
 
 def dropGift():
-    # Drop the gift at the tree
-    pass
+    wp.pwmWrite(SERVO_LIFT, LOWER_SERVO)
+    wp.pwmWrite(SERVO_PINCH, OPEN_SERVO)
+ 
+    wp.pwmWrite(SERVO_LIFT, RAISE_SERVO)
+    wp.pwmWrite(SERVO_PINCH, CLOSE_SERVO)
 
 # Initialize first node
 map_dic={1:[[0,0,0],[0,0,0],0,'N']}
