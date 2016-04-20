@@ -156,21 +156,21 @@ def update_intersection(irSensors):
 
 ''' 
 *** NOTE ***
-Left: Light Green 2Y0A21
+Left: Dark Green 2Y0A21
 Front: 2D120X
-Right: Dark Green 2Y0A21
+Right: Light Green 2Y0A21
 '''
 
 def irDistLeft(volts):
-    # Function to calculate distance from left sensor
-    return 26.453 * volts**(-1.221)
+    # Function to calculate distance from right sensor
+    return 26.47 * volts**(-1.185)
 
 def irDistFront(volts):
     return 11.721 * volts**(-0.972)
 
 def irDistRight(volts):
-    # Function to calculate distance from right sensor
-    return 26.47 * volts**(-1.185)
+    # Function to calculate distance from left sensor
+    return 26.453 * volts**(-1.221)
 
 def pixyDetectItem():
 
