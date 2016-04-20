@@ -4,10 +4,11 @@ import mapping
 from Adafruit_ADS1x15 import ADS1x15
 import wiringpi as wp
 from time import sleep 
-#from pixy import easy_pixy
+from pixy import easy_pixy
 
-#x = easy_pixy()
 
+#Pixy 
+pixy_object = easy_pixy.easy_pixy()
 
 #left motor
 PWM_L = 12  #pin 32 

@@ -5,7 +5,7 @@ import time
 # Pixy Python SWIG get blocks example #
 
 print ("Pixy Python SWIG Example -- Get Blocks")
-
+print ("ARE YOU RUNNING AS ROOT??")
 
 class easy_pixy():
 
@@ -34,9 +34,11 @@ class easy_pixy():
                 print '[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (self.blocks[index].type, self.blocks[index].signature, self.blocks[index].x, self.blocks[index].y, self.blocks[index].width, self.blocks[index].height)
         else:
             print 'No Blocks Found.'        
+            return -1
+        return self.blocks
 
-x = easy_pixy()
-while 1:
-    x.get_blocks()
-    time.sleep(1)
+#x = easy_pixy()
+#while 1:
+#    x.get_blocks()
+#    time.sleep(1)
 
