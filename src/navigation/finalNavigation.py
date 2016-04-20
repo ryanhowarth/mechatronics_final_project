@@ -4,9 +4,9 @@ import mapping
 from Adafruit_ADS1x15 import ADS1x15
 import wiringpi as wp
 from time import sleep 
-from pixy import easy_pixy
+#from pixy import easy_pixy
 
-x = easy_pixy()
+#x = easy_pixy()
 
 
 #left motor
@@ -222,6 +222,7 @@ mapping.print_node(map_dic)
 
 while True:
 
+    sleep(3)
     moveRobotForward()
 
     path_lst = update_intersection(irSensors)
