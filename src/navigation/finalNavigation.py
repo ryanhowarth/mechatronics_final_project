@@ -4,26 +4,29 @@ import mapping
 from Adafruit_ADS1x15 import ADS1x15
 import wiringpi as wp
 from time import sleep 
+from pixy import easy_pixy
+
+x = easy_pixy()
+
 
 #left motor
-PWM_L = 6  #pin 32 
+PWM_L = 12  #pin 32 
 INPUT_1_LEFT_MOTOR = 25 #pin 22
 INPUT_2_LEFT_MOTOR = 8 #pin 24
 
 #right motor
-PWM_R = 5 #pin 33
+PWM_R = 13 #pin 33
 INPUT_1_RIGHT_MOTOR = 9 #pin 21 
 INPUT_2_RIGHT_MOTOR = 11 #pin 23
+
+time_turn = .075
+time_forward = .2
 
 GIFT_PIN = 20 #pin 38
 TREE_PIN = 21 #pin 21
 
-SERVO_LIFT = 12 #pin 32
-SERVO_PINCH = 13 #pin 33
-LOWER_SERVO = 128
-RAISE_SERVO = 80
-CLOSE_SERVO = 50
-OPEN_SERVO = 100
+SERVO1 = 12 #pin 32
+SERVO2 = 13 #pin 33
 
 INPUT_MODE = 0
 OUTPUT_MODE = 1
@@ -50,37 +53,37 @@ wp.pinMode(INPUT_2_RIGHT_MOTOR, OUTPUT_MODE)
 wp.pinMode(GIFT_PIN, INPUT_MODE)
 wp.pinMode(TREE_PIN, INPUT_MODE)
 
-wp.pinMode(SERVO_LIFT, PWM_MODE)
-wp.pinMode(SERVO_PINCH, PWM_MODE)
+wp.pinMode(SERVO1, PWM_MODE)
+wp.pinMode(SERVO2, PWM_MODE)
 wp.pwmSetMode(0)
 wp.pwmSetClock(400)
 wp.pwmSetRange(1024)
-wp.pwmWrite(SERVO_LIFT, RAISE_SERVO)
-wp.pwmWrite(SERVO_PINCH, CLOSE_SERVO)
-
+wp.pwmWrite(SERVO1, 80)
+wp.pwmWrite(SERVO2,80)
+ 
 def forwardLmotor():
-    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 1)
-    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 0)
-
-def backwardLmotor():
     wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
     wp.digitalWrite(INPUT_2_LEFT_MOTOR, 1)
 
-def forwardRmotor():
-    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 1)
-    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
+def backwardLmotor():
+    wp.digitalWrite(INPUT_1_LEFT_MOTOR, 1)
+    wp.digitalWrite(INPUT_2_LEFT_MOTOR, 0)
 
-def backwardRmotor():
+def forwardRmotor():
     wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 0)
     wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 1)
+
+def backwardRmotor():
+    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 1)
+    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
 
 def moveRobotForward():
     # Move robot forward one grid space
     forwardRmotor()
     forwardLmotor()
-    wp.pwmWrite(PWM_L, 1000)
-    wp.pwmWrite(PWM_R, 1000)
-    sleep(2)
+    wp.pwmWrite(PWM_L, 1024)
+    wp.pwmWrite(PWM_R, 1024)
+    sleep(time_forward)
     wp.pwmWrite(PWM_L, 0)
     wp.pwmWrite(PWM_R, 0)
     print 'forward'
@@ -89,9 +92,9 @@ def turnRobotLeft():
     # Turn robot 90 degrees left
     forwardRmotor()
     backwardLmotor()
-    wp.pwmWrite(PWM_L, 1000)
-    wp.pwmWrite(PWM_R, 1000)
-    sleep(2)
+    wp.pwmWrite(PWM_L, 1024)
+    wp.pwmWrite(PWM_R, 1024)
+    sleep(time_turn)
     wp.pwmWrite(PWM_R, 0)
     wp.pwmWrite(PWM_L, 0)
     print 'turn left'
@@ -100,9 +103,9 @@ def turnRobotRight():
     # Turn robot 90 degrees right
     forwardLmotor()
     backwardRmotor()
-    wp.pwmWrite(PWM_L, 1000)
-    wp.pwmWrite(PWM_R, 1000)
-    sleep(2)
+    wp.pwmWrite(PWM_L, 1024)
+    wp.pwmWrite(PWM_R, 1024)
+    sleep(time_turn)
     wp.pwmWrite(PWM_L, 0)
     wp.pwmWrite(PWM_R, 0)
     print 'turn right'
@@ -302,25 +305,4 @@ while True:
 
         # Change direction
         tree_lst[2] = 'b'
-
-        turnRobotAround()
-
-
-while not giftDropped:
-
-    moveRobotForward()
-
-    # Access previous turn
-    turnIndex -= 1
-    currTurn = turnList[turnIndex]
-
-    # Turn depending on last command. Drop gift
-    if currTurn == 'L':
-        turnRobotLeft()
-    elif currTurn == 'R':
-        turnRobotRight()
-    elif currTurn == 'G':
-        dropGift()
-
-
 
