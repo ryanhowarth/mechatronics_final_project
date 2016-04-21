@@ -7,12 +7,13 @@ pwm = ADA.PCA9685()
 servo_min = 260
 servo_max = 400
  
-PWM_SERVO1 = 7  
+PWM_SERVO1 = 0
 
 pwm.set_pwm_freq(60)
 
 try: 
     while True:
+        pwm.set_pwm(PWM_SERVO1, 0, 400)
         for i in xrange(servo_min, servo_max):	
             pwm.set_pwm(PWM_SERVO1,0, i)
         sleep(2)
