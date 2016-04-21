@@ -5,10 +5,15 @@ from Adafruit_ADS1x15 import ADS1x15
 import wiringpi as wp
 from time import sleep 
 from pixy import easy_pixy
+import Adafruit_PCA9685
 
+#SDA pin 3, SCL pin 5
 
 #Pixy 
 pixy_object = easy_pixy.easy_pixy()
+
+#pwm
+pwmControl = Adafruit_PCA9685.PCA9685()
 
 #left motor
 PWM_L = 12  #pin 32 
@@ -20,8 +25,8 @@ PWM_R = 13 #pin 33
 INPUT_1_RIGHT_MOTOR = 9 #pin 21 
 INPUT_2_RIGHT_MOTOR = 11 #pin 23
 
-time_turn = .075
-time_forward = .2
+time_turn = .15
+time_forward = .4
 
 GIFT_PIN = 20 #pin 38
 TREE_PIN = 21 #pin 21
@@ -59,9 +64,9 @@ wp.pinMode(SERVO2, PWM_MODE)
 wp.pwmSetMode(0)
 wp.pwmSetClock(400)
 wp.pwmSetRange(1024)
-wp.pwmWrite(SERVO1, 80)
-wp.pwmWrite(SERVO2,80)
- 
+wp.pwmWrite(SERVO1, 0)
+wp.pwmWrite(SERVO2,0) 
+
 def forwardLmotor():
     wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
     wp.digitalWrite(INPUT_2_LEFT_MOTOR, 1)
@@ -82,8 +87,8 @@ def moveRobotForward():
     # Move robot forward one grid space
     forwardRmotor()
     forwardLmotor()
-    wp.pwmWrite(PWM_L, 1024)
-    wp.pwmWrite(PWM_R, 1024)
+    wp.pwmWrite(PWM_L, 600)
+    wp.pwmWrite(PWM_R, 600)
     sleep(time_forward)
     wp.pwmWrite(PWM_L, 0)
     wp.pwmWrite(PWM_R, 0)
@@ -93,8 +98,8 @@ def turnRobotLeft():
     # Turn robot 90 degrees left
     forwardRmotor()
     backwardLmotor()
-    wp.pwmWrite(PWM_L, 1024)
-    wp.pwmWrite(PWM_R, 1024)
+    wp.pwmWrite(PWM_L, 600)
+    wp.pwmWrite(PWM_R, 600)
     sleep(time_turn)
     wp.pwmWrite(PWM_R, 0)
     wp.pwmWrite(PWM_L, 0)
@@ -104,8 +109,8 @@ def turnRobotRight():
     # Turn robot 90 degrees right
     forwardLmotor()
     backwardRmotor()
-    wp.pwmWrite(PWM_L, 1024)
-    wp.pwmWrite(PWM_R, 1024)
+    wp.pwmWrite(PWM_L, 600)
+    wp.pwmWrite(PWM_R, 600)
     sleep(time_turn)
     wp.pwmWrite(PWM_L, 0)
     wp.pwmWrite(PWM_R, 0)
@@ -131,27 +136,33 @@ def update_intersection(irSensors):
     # Check surroundings for available paths
     gain = 4096
     sps = 250
+    distanceL=[]
+    distanceM = []
+    distanceR = []
 
-    voltsL = irSensors.readADCSingleEnded(0,gain,sps)/1000
-    distanceL = irDistLeft(voltsL)
+    for i in xrange(1, 10):
+        voltsL = irSensors.readADCSingleEnded(0,gain,sps)/1000
+        distanceL.append(irDistLeft(voltsL))
+	voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
+        distanceM.append(irDistFront(voltsM))
+	voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
+        distanceR.append( irDistRight(voltsR))
+	sleep(.1)
 
-    #print 'left: ' + str(distanceL)
+    final_distanceL = sum(distanceL)/len(distanceL)
+    final_distanceM = sum(distanceM)/len(distanceM)
+    final_distanceR = sum(distanceR)/len(distanceR)    
+    print 'left: ' + str(final_distanceL)
     
-    voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
-    distanceM = irDistFront(voltsM)
-
-    #print 'front: ' + str(distanceM)
+    print 'front: ' + str(final_distanceM)
     
-    voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
-    distanceR = irDistRight(voltsR)
-
-    #print 'right: ' + str(distanceR)
+    print 'right: ' + str(final_distanceR)
 
     path_lst=[False]*3
 
-    path_lst[0] = distanceL > 10
-    path_lst[1] = distanceM > 10
-    path_lst[2] = distanceR > 10
+    path_lst[0] = final_distanceL > 20
+    path_lst[1] = final_distanceM > 20
+    path_lst[2] = final_distanceR > 20
     
     return path_lst 
 
@@ -172,6 +183,29 @@ def irDistFront(volts):
 def irDistRight(volts):
     # Function to calculate distance from left sensor
     return 26.453 * volts**(-1.221)
+
+def checkItem():
+    # Check if there's an item
+    itemFound = pixyDetectItem()
+
+    if itemFound == 'gift':
+        giftFound = True
+        pickUpGift()
+
+        if treeFound: 
+            # Exit and navigate to the tree
+	    pass
+
+    elif itemFound == 'tree':
+        treeFound = True
+
+        if giftFound:
+            dropGift()
+            giftDropped = True
+            k
+            
+        turnList = {1: 'G'}
+        turnIndex = 2
 
 def pixyDetectItem():
 
@@ -222,10 +256,10 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 mapping.print_node(map_dic)
 
 while True:
-
+    #pwmControl.set_pwm(0,0,150)
     sleep(3)
     moveRobotForward()
-
+    #pwmControl.set_pwm(0,0,600)
     path_lst = update_intersection(irSensors)
 
     # Check if left turn is available
@@ -277,29 +311,6 @@ while True:
     # Deadend has been reached
     else:
 
-        # Check if there's an item
-        itemFound = pixyDetectItem()
-
-        if itemFound == 'gift':
-            giftFound = True
-            pickUpGift()
-
-            if treeFound: 
-                # Exit and navigate back to tree
-                turnRobotAround()
-                break
-
-        elif itemFound == 'tree':
-            treeFound = True
-
-            if giftFound:
-                dropGift()
-                giftDropped = True
-                break
-            
-            turnList = {1: 'G'}
-            turnIndex = 2
-
         # Swap current node and previous node
         temp = tree_lst[1]
         tree_lst[1] = tree_lst[0]
@@ -307,4 +318,6 @@ while True:
 
         # Change direction
         tree_lst[2] = 'b'
+
+
 
