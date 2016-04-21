@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 import mapping
 from Adafruit_ADS1x15 import ADS1x15
 import wiringpi as wp
@@ -15,13 +14,13 @@ servoControl = Adafruit_PCA9685.PCA9685()
 
 #left motor
 PWM_L = 12  #pin 32 
-INPUT_1_LEFT_MOTOR = 25 #pin 22
-INPUT_2_LEFT_MOTOR = 8 #pin 24
+INPUT_1_LEFT_MOTOR = 17 #pin 11
+INPUT_2_LEFT_MOTOR = 27 #pin 13
 
 #right motor
 PWM_R = 13 #pin 33
-INPUT_1_RIGHT_MOTOR = 9 #pin 21 
-INPUT_2_RIGHT_MOTOR = 11 #pin 23
+INPUT_1_RIGHT_MOTOR = 23 #pin 16 
+INPUT_2_RIGHT_MOTOR = 24 #pin 18
 
 time_turn = .15
 time_forward = .4
@@ -245,6 +244,7 @@ def dropGift():
     sleep(1)
     servoControl.set_pwm(SERVO_PINCH, 0, CLOSE_SERVO)
     sleep(1)
+
 # Initialize first node
 map_dic={1:[[0,0,0],[0,0,0],0,'N']}
 
@@ -269,10 +269,9 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 mapping.print_node(map_dic)
 
 while True:
-    #pwmControl.set_pwm(0,0,150)
     sleep(3)
     moveRobotForward()
-    #pwmControl.set_pwm(0,0,600)
+
     path_lst = update_intersection(irSensors)
 
     # Check if left turn is available

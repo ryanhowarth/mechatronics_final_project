@@ -31,8 +31,8 @@ class easy_pixy():
             print 'frame %3d:' % (self.frame)
             self.frame = self.frame + 1
             for index in range (0, count):
-                print '[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (self.blocks[index].type, self.blocks[index].signature, self.blocks[index].x, self.blocks[index].y, self.blocks[index].width, self.blocks[index].height)
-                return self.blocks[index].signature
+               print '[BLOCK_TYPE=%d SIG=%d X=%3d Y=%3d WIDTH=%3d HEIGHT=%3d]' % (self.blocks[index].type, self.blocks[index].signature, self.blocks[index].x, self.blocks[index].y, self.blocks[index].width, self.blocks[index].height)
+               return self.blocks[index].signature
         else:
             print 'No Blocks Found.'        
             return 0
