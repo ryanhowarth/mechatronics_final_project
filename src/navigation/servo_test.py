@@ -1,31 +1,24 @@
 import wiringpi as wp
 from time import sleep 
+import Adafruit_PCA9685 as ADA
 
-wp.wiringPiSetupGpio()
+pwm = ADA.PCA9685()
+
+servo_min = 260
+servo_max = 400
  
-PWM_SERVO1 = 12 #pin 32
-PWM_SERVO2 = 13 #pin 33
-PWM_MODE = 2
+PWM_SERVO1 = 7  
 
-wp.pinMode(PWM_SERVO1, PWM_MODE)
-wp.pwmSetMode(0)
-wp.pwmSetClock(400)
-wp.pwmSetRange(1024)
-wp.pwmWrite(PWM_SERVO1, 1000)
-
-wp.pinMode(PWM_SERVO2, PWM_MODE)
-wp.pwmSetMode(0)
-wp.pwmSetClock(400)
-wp.pwmSetRange(1024)
+pwm.set_pwm_freq(60)
 
 try: 
-	while True:
-		print '128'
-		wp.pwmWrite(PWM_SERVO2, 128)
-		sleep(2)
-		print '63'
-		wp.pwmWrite(PWM_SERVO2, 80)		
-		sleep(2)
-
+    while True:
+        for i in xrange(servo_min, servo_max):	
+            pwm.set_pwm(PWM_SERVO1,0, i)
+        sleep(2)
+        
+        for i in xrange(servo_min, servo_max):
+            pwm.set_pwm(PWM_SERVO1, 0, servo_max + servo_min - i)		
+        sleep(2)
 finally: 
-	wp.pwmWrite(PWM_SERVO2, 0)
+	pwm.set_pwm(PWM_SERVO1,0, 0)
