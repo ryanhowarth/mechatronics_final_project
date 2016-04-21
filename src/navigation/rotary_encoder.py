@@ -114,6 +114,7 @@ if __name__ == "__main__":
    import rotary_encoder
 
    pos = 1
+   pos2 = 1
 
    def callback(way):
 
@@ -123,13 +124,21 @@ if __name__ == "__main__":
 
       print("pos={}".format(pos))
 
+   def callback2(way):
+
+      global pos2
+
+      pos2 += way
+
+      print("pos2={}".format(pos2))
+
    pi = pigpio.pi()
 
-   decoder = rotary_encoder.decoder(pi, 20, 26, callback) #pin A=38  pin B=37
-
+   decoder_motorL = rotary_encoder.decoder(pi, 20, 26, callback) #pin A=38  pin B=37
+   decoder_motorR  = rotary_encoder.decoder(pi, 19, 16, callback2) #pin A=35 pin B=36
    time.sleep(300)
 
-   decoder.cancel()
-
+   decoder_motorL.cancel()
+   decoder_motorR.cancel()
    pi.stop()
 
