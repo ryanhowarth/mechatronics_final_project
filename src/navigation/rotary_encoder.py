@@ -136,9 +136,16 @@ if __name__ == "__main__":
 
    decoder_motorL = rotary_encoder.decoder(pi, 20, 26, callback) #pin A=38  pin B=37
    decoder_motorR  = rotary_encoder.decoder(pi, 19, 16, callback2) #pin A=35 pin B=36
-   time.sleep(300)
-
+   time.sleep(10)
    decoder_motorL.cancel()
    decoder_motorR.cancel()
    pi.stop()
+
+   while 1:
+      print "running"
+      time.sleep(1) 
+
+
+
+
 
