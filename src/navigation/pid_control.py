@@ -28,8 +28,8 @@ class easy_PID():
 
         PID += self.d_gain*(error - self.prev_error)
         self.prev_error = error
-        if (PID > 125):
-            PID = 125
+        if (PID > 500):
+            PID = 500
         if (PID < 0):
             PID = 0
         return int(round(PID))

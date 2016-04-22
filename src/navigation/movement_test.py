@@ -60,9 +60,9 @@ def moveRobotForward():
     forwardLmotor()
     wp.pwmWrite(PWM_L, 1024)
     wp.pwmWrite(PWM_R, 1024)
-    sleep(time_forward)
-    wp.pwmWrite(PWM_L, 0)
-    wp.pwmWrite(PWM_R, 0)
+    sleep(5)
+    #wp.pwmWrite(PWM_L, 0)
+    #wp.pwmWrite(PWM_R, 0)
    
 
 def turnRobotLeft():
@@ -108,20 +108,20 @@ def shutoffRobot():
     print 'turn off'
 
 try: 
-	while True:
-		print 'starting code' 
-		moveRobotForward()
-		sleep(2.0)
-		turnRobotLeft()
-		sleep(2.0)
-		moveRobotForward()
-		sleep(2.0)
-		turnRobotRight()
-		sleep(2.0)
-		moveRobotForward()
-		sleep(2.0)
-		turnRobotAround()
-		sleep(2.0)
+    while True:
+	print 'starting code' 
+	moveRobotForward()
+	break	#sleep(2.0)
+		#turnRobotLeft()
+		#sleep(2.0)
+		#moveRobotForward()
+		#sleep(2.0)
+		#turnRobotRight()
+		#sleep(2.0)
+		#moveRobotForward()
+		#sleep(2.0)
+		#turnRobotAround()
+		#sleep(2.0)
 
 finally: 
 	shutoffRobot()

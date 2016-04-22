@@ -156,7 +156,7 @@ def moveRobotForward():
     forwardRmotor()
     forwardLmotor()
     print "#########MOVING FORWARD############"
-    move_robot(435, 450)
+    move_robot(400, 400)
 
 def turnRobotLeft():
     forwardRmotor()
@@ -188,34 +188,33 @@ def move_robot(left_goal, right_goal):
     loop_check = 0
     right_PID_Obj.reset()
     left_PID_Obj.reset()
+    R_pwm_speed = 100
+    L_pwm_speed = 100
     while (left_error > 10) and (right_error > 10):
         
         
-        R_pwm_speed = right_PID_Obj.get_pwm(right_error)
-        L_pwm_speed = left_PID_Obj.get_pwm(left_error)
+        #R_pwm_speed = right_PID_Obj.get_pwm(right_error)
+        #L_pwm_speed = left_PID_Obj.get_pwm(left_error)
+        
         print "############### IR DATA ############"
         ir_data = get_ir_sensor_data(irSensors)
         print (ir_data)
         left_ir = ir_data[0]
         middle_ir = ir_data[1]
         right_ir = ir_data[2]
-        if (left_ir < right_ir):
-            if (left_ir > 10):
+        if (left_ir < 20):
+            if (left_ir > 8):
                 L_pwm_speed -= 10
-	    elif(left_ir > 6 and left_ir < 8):
- 		L_pwm_speed -=5
-            elif (left_ir < 5.0):
-                L_pwm_speed += 10
-        elif (right_ir < left_ir):
-	    if (right_ir >10):
-		R_pwm_speed -= 10
-            elif (right_ir > 6 and right_ir < 8):
-                R_pwm_speed -= 5
-            elif (right_ir < 5.0): 
-                R_pwm_speed += 10
-
+                print "DECREASING LEFT SPEED"
+	    elif(left_ir > 2 and left_ir < 5):
+            L_pwm_speed +=5
+        elif (right_ir < 20):
+            if (right_ir > 8):
+                R_pwm_speed -= 10
+            elif (right_ir > 2 and right_ir < 5):
+                R_pwm_speed += 5
         
-
+        
         print "------------IR DATA-------------"
         print "---------------"
         print "Right PWM: ", R_pwm_speed
@@ -223,7 +222,7 @@ def move_robot(left_goal, right_goal):
         print "---------------"
         wp.pwmWrite(PWM_R, R_pwm_speed)
         wp.pwmWrite(PWM_L, L_pwm_speed)
-        
+        #sleep(0.05)
         
         right_count = x.get_right_wheel_count()
         print "right_count: ", right_count
@@ -319,7 +318,7 @@ Left: Dark Green 2Y0A21
 Front: 2D120X
 Right: Light Green 2Y0A21
 '''
-
+'''
 def irDistLeft(volts):
     # Function to calculate distance from right sensor
     return 26.47 * volts**(-1.185)
@@ -330,6 +329,17 @@ def irDistFront(volts):
 def irDistRight(volts):
     # Function to calculate distance from left sensor
     return 26.453 * volts**(-1.221)
+'''
+
+def irDistLeft(volts):
+    return 11.721 * volts**(-0.972)
+
+def irDistFront(volts):
+    return 11.721 * volts**(-0.972)
+
+def irDistRight(volts):
+    return 11.721 * volts**(-0.972)
+
 
 def checkItem():
     # Check if there's an item
