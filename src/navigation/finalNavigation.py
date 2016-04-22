@@ -180,7 +180,6 @@ def move_robot(left_goal, right_goal):
 	init_Lcount = x.get_left_wheel_count()
 	print "init_Rcount: ", init_Rcount
 	print "init_Lcount: ", init_Lcount
-	
 	LEFT_GOAL_COUNT = left_goal
 	RIGHT_GOAL_COUNT = right_goal
 	left_error = LEFT_GOAL_COUNT
@@ -191,8 +190,6 @@ def move_robot(left_goal, right_goal):
 	R_pwm_speed = 100
 	L_pwm_speed = 100
 	while (left_error > 10) and (right_error > 10):
-		
-		
 		#R_pwm_speed = right_PID_Obj.get_pwm(right_error)
 		#L_pwm_speed = left_PID_Obj.get_pwm(left_error)
 		
@@ -213,17 +210,27 @@ def move_robot(left_goal, right_goal):
 				R_pwm_speed -= 10
 			elif (right_ir > 2 and right_ir < 5):
 				R_pwm_speed += 5
-		
-		
-		print "------------IR DATA-------------"
-		print "---------------"
-		print "Right PWM: ", R_pwm_speed
-		print "Left PWM: ", L_pwm_speed
-		print "---------------"
-		wp.pwmWrite(PWM_R, R_pwm_speed)
-		wp.pwmWrite(PWM_L, L_pwm_speed)
-		#sleep(0.05)
-		
+
+        	if R_pwm_speed > 250:
+        		R_pwm_speed = 250
+        	elif R_pwm_speed < 50:
+			R_pwm_speed = 50
+		if L_pwm_speed > 250:
+			L_pwm_speed = 250
+		elif L_pwm_speed < 50:
+			L_pwm_speed = 50
+
+
+
+        	print "------------IR DATA-------------"
+        	print "---------------"
+        	print "Right PWM: ", R_pwm_speed
+        	print "Left PWM: ", L_pwm_speed
+        	print "---------------"
+        	wp.pwmWrite(PWM_R, R_pwm_speed)
+        	wp.pwmWrite(PWM_L, L_pwm_speed)
+        	sleep(0.1)
+
 		right_count = x.get_right_wheel_count()
 		print "right_count: ", right_count
 		left_count = x.get_left_wheel_count()
@@ -233,10 +240,9 @@ def move_robot(left_goal, right_goal):
 		print "right_error: ", right_error
 		left_error = LEFT_GOAL_COUNT - abs(left_count - init_Lcount)
 		print "left error: ", left_error
+
 	wp.pwmWrite(PWM_R, 0)
 	wp.pwmWrite(PWM_L, 0)
-
-
 
 def get_ir_sensor_data(irSensors):
 	# Check surroundings for available paths
@@ -351,7 +357,7 @@ def checkItem():
 
 		if treeFound: 
 			# Exit and navigate to the tree
-		pass
+		    pass
 
 	elif itemFound == 'tree':
 		treeFound = True
