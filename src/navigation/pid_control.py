@@ -26,10 +26,10 @@ class easy_PID():
         self.accumulator += error
         PID += self.i_gain*self.accumulator
 
-        #PID += self.d_gain*(error - self.prev_error)
-        #self.prev_error = error
-        if (PID > 150):
-            PID = 150
+        PID += self.d_gain*(error - self.prev_error)
+        self.prev_error = error
+        if (PID > 125):
+            PID = 125
         if (PID < 0):
             PID = 0
         return int(round(PID))

@@ -17,6 +17,9 @@ pos2  = 1
 #Pixy 
 #pixy_object = easy_pixy.easy_pixy()
 
+# Initialize sensors
+irSensors = ADS1x15(ic=0x00)
+
 #pwm
 servoControl = Adafruit_PCA9685.PCA9685()
 
@@ -152,21 +155,21 @@ def moveRobotForward():
     # Move robot forward one grid space
     forwardRmotor()
     forwardLmotor()
-    print "------MOVING FORWARD-----"
-    move_robot(390, 465)
+    print "#########MOVING FORWARD############"
+    move_robot(435, 450)
 
 def turnRobotLeft():
     forwardRmotor()
     backwardLmotor()
-    print "----TURNING LEFT----"
-    move_robot(230, 206)
+    print "#######TURNING LEFT############"
+    move_robot(220, 196)
 
 def turnRobotRight():
     # Turn robot 90 degrees right
     forwardLmotor()
     backwardRmotor()
-    print ("-----TURNING RIGHT------")
-    move_robot(206, 230)
+    print ("##########TURNING RIGHT#########")
+    move_robot(196, 220)
 
 def move_robot(left_goal, right_goal):
     # Turn robot 90 degrees left
@@ -186,15 +189,42 @@ def move_robot(left_goal, right_goal):
     right_PID_Obj.reset()
     left_PID_Obj.reset()
     while (left_error > 10) and (right_error > 10):
+        
+        
         R_pwm_speed = right_PID_Obj.get_pwm(right_error)
         L_pwm_speed = left_PID_Obj.get_pwm(left_error)
+        print "############### IR DATA ############"
+        ir_data = get_ir_sensor_data(irSensors)
+        print (ir_data)
+        left_ir = ir_data[0]
+        middle_ir = ir_data[1]
+        right_ir = ir_data[2]
+        if (left_ir < right_ir):
+            if (left_ir > 10):
+                L_pwm_speed -= 10
+	    elif(left_ir > 6 and left_ir < 8):
+ 		L_pwm_speed -=5
+            elif (left_ir < 5.0):
+                L_pwm_speed += 10
+        elif (right_ir < left_ir):
+	    if (right_ir >10):
+		R_pwm_speed -= 10
+            elif (right_ir > 6 and right_ir < 8):
+                R_pwm_speed -= 5
+            elif (right_ir < 5.0): 
+                R_pwm_speed += 10
+
+        
+
+        print "------------IR DATA-------------"
         print "---------------"
         print "Right PWM: ", R_pwm_speed
         print "Left PWM: ", L_pwm_speed
         print "---------------"
         wp.pwmWrite(PWM_R, R_pwm_speed)
         wp.pwmWrite(PWM_L, L_pwm_speed)
-        sleep(0.1)
+        
+        
         right_count = x.get_right_wheel_count()
         print "right_count: ", right_count
         left_count = x.get_left_wheel_count()
@@ -204,12 +234,34 @@ def move_robot(left_goal, right_goal):
         print "right_error: ", right_error
         left_error = LEFT_GOAL_COUNT - abs(left_count - init_Lcount)
         print "left error: ", left_error
-    
     wp.pwmWrite(PWM_R, 0)
     wp.pwmWrite(PWM_L, 0)
 
 
 
+def get_ir_sensor_data(irSensors):
+    # Check surroundings for available paths
+    gain = 4096
+    sps = 250
+    distanceL=[]
+    distanceM = []
+    distanceR = []
+
+    for i in xrange(1, 5):
+        voltsL = irSensors.readADCSingleEnded(0,gain,sps)/1000
+        distanceL.append(irDistLeft(voltsL))
+        voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
+        distanceM.append(irDistFront(voltsM))
+        voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
+        distanceR.append( irDistRight(voltsR))
+        sleep(.005)
+
+    final_distanceL = sum(distanceL)/len(distanceL)
+    final_distanceM = sum(distanceM)/len(distanceM)
+    final_distanceR = sum(distanceR)/len(distanceR)    
+   
+    ir_list = [final_distanceL, final_distanceM, final_distanceR] 
+    return ir_list 
 
 
 def turnRobotAround():
@@ -238,11 +290,11 @@ def update_intersection(irSensors):
     for i in xrange(1, 10):
         voltsL = irSensors.readADCSingleEnded(0,gain,sps)/1000
         distanceL.append(irDistLeft(voltsL))
-	voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
+        voltsM = irSensors.readADCSingleEnded(1,gain,sps)/1000
         distanceM.append(irDistFront(voltsM))
-	voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
+        voltsR = irSensors.readADCSingleEnded(2,gain,sps)/1000
         distanceR.append( irDistRight(voltsR))
-	sleep(.1)
+        sleep(.5)
 
     final_distanceL = sum(distanceL)/len(distanceL)
     final_distanceM = sum(distanceM)/len(distanceM)
@@ -273,7 +325,7 @@ def irDistLeft(volts):
     return 26.47 * volts**(-1.185)
 
 def irDistFront(volts):
-    return 11.721 * volts**(-0.972)
+    return 26.46 * volts**(-1.2)
 
 def irDistRight(volts):
     # Function to calculate distance from left sensor
@@ -349,8 +401,6 @@ giftFound = False
 treeFound = False
 giftDropped = False
 
-# Initialize sensors
-irSensors = ADS1x15(ic=0x00)
 
 # Create second node based on initialized tree_lst and path_lst
 mapping.node_proc(map_dic, tree_lst, path_lst)
