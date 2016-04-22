@@ -4,13 +4,13 @@ import wiringpi as wp
 
 #left motor
 PWM_L = 12  #pin 32
-INPUT_1_LEFT_MOTOR = 17 #pin 22
-INPUT_2_LEFT_MOTOR = 27 #pin 24
+INPUT_1_LEFT_MOTOR = 8 #pin 24
+INPUT_2_LEFT_MOTOR = 25 #pin 22
 
 #right motor
-PWM_R = 13 #pin 37
-INPUT_1_RIGHT_MOTOR = 23 #pin 21
-INPUT_2_RIGHT_MOTOR = 24 #pin 23
+PWM_R = 13 #pin 33
+INPUT_1_RIGHT_MOTOR = 11 #pin 23
+INPUT_2_RIGHT_MOTOR = 9 #pin 21
 
 PWM_MODE = 2
 ON = 1

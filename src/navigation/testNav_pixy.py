@@ -1,3 +1,5 @@
+# Annie -- testing pixy gift and tree recognition
+
 #!/usr/bin/python
 import mapping
 from Adafruit_ADS1x15 import ADS1x15
@@ -7,33 +9,30 @@ from pixy import easy_pixy
 import Adafruit_PCA9685
 import pigpio
 import rotary_encoder
-import pid_control
-
 
 #encoders 
 pos = 1
 pos2  = 1
 
+
 #Pixy 
-#pixy_object = easy_pixy.easy_pixy()
+pixy_object = easy_pixy.easy_pixy()
 
 #pwm
 servoControl = Adafruit_PCA9685.PCA9685()
 
 #left motor
 PWM_L = 12  #pin 32 
-INPUT_1_LEFT_MOTOR = 8 #pin 24
-INPUT_2_LEFT_MOTOR = 25 #pin 22
+INPUT_1_LEFT_MOTOR = 27 #pin 13
+INPUT_2_LEFT_MOTOR = 17 #pin 11
 
 #right motor
 PWM_R = 13 #pin 33
-INPUT_1_RIGHT_MOTOR = 11 #pin 23 
-INPUT_2_RIGHT_MOTOR = 9 #pin 21
+INPUT_1_RIGHT_MOTOR = 24 #pin 18 
+INPUT_2_RIGHT_MOTOR = 23 #pin 16
 
 time_turn = .15
 time_forward = .4
-speedL = 100
-speedR = 100 
 
 GIFT_PIN = 20 #pin 38
 TREE_PIN = 21 #pin 21
@@ -124,9 +123,7 @@ class easy_encoders():
     def get_left_wheel_count(self):
         return self.lw_count
 
-x = easy_encoders()
-
-
+encoders = easy_encoders()
 
 def forwardLmotor():
     wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
@@ -144,72 +141,53 @@ def backwardRmotor():
     wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 1)
     wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
 
-
-right_PID_Obj = pid_control.easy_PID(.75, .02, .1)
-left_PID_Obj = pid_control.easy_PID(.75, .02, .1)
-
 def moveRobotForward():
     # Move robot forward one grid space
     forwardRmotor()
     forwardLmotor()
-    print "------MOVING FORWARD-----"
-    move_robot(390, 465)
+    print "right wheel count: ", x.get_right_wheel_count()
+    print "left wheel count: ", x.get_left_wheel_count()
+    print "------------------"
+
+    wp.pwmWrite(PWM_L, 600)
+    wp.pwmWrite(PWM_R, 600)
+    sleep(time_forward)
+    wp.pwmWrite(PWM_L, 0)
+    wp.pwmWrite(PWM_R, 0)
+    print "right wheel count: ", x.get_right_wheel_count()
+    print "left wheel count: ", x.get_left_wheel_count()
+    print "------------------"
+    print 'forward'
 
 def turnRobotLeft():
+    # Turn robot 90 degrees left
     forwardRmotor()
     backwardLmotor()
-    print "----TURNING LEFT----"
-    move_robot(230, 206)
+    print "right wheel count: ", x.get_right_wheel_count()
+    print "left wheel count: ", x.get_left_wheel_count()
+    print "------------------"
+
+    wp.pwmWrite(PWM_L, 600)
+    wp.pwmWrite(PWM_R, 600)
+    sleep(time_turn)
+    wp.pwmWrite(PWM_R, 0)
+    wp.pwmWrite(PWM_L, 0)
+    print "right wheel count: ", x.get_right_wheel_count()
+    print "left wheel count: ", x.get_left_wheel_count()
+    print "------------------"
+	
+    print 'turn left'
 
 def turnRobotRight():
     # Turn robot 90 degrees right
     forwardLmotor()
     backwardRmotor()
-    print ("-----TURNING RIGHT------")
-    move_robot(206, 230)
-
-def move_robot(left_goal, right_goal):
-    # Turn robot 90 degrees left
-    #print "right wheel count: ", x.get_right_wheel_count()
-    #print "left wheel count: ", x.get_left_wheel_count()
-    #print "------------------"
-    init_Rcount = x.get_right_wheel_count()
-    init_Lcount = x.get_left_wheel_count()
-    print "init_Rcount: ", init_Rcount
-    print "init_Lcount: ", init_Lcount
-    
-    LEFT_GOAL_COUNT = left_goal
-    RIGHT_GOAL_COUNT = right_goal
-    left_error = LEFT_GOAL_COUNT
-    right_error = RIGHT_GOAL_COUNT
-    loop_check = 0
-    right_PID_Obj.reset()
-    left_PID_Obj.reset()
-    while (left_error > 10) and (right_error > 10):
-        R_pwm_speed = right_PID_Obj.get_pwm(right_error)
-        L_pwm_speed = left_PID_Obj.get_pwm(left_error)
-        print "---------------"
-        print "Right PWM: ", R_pwm_speed
-        print "Left PWM: ", L_pwm_speed
-        print "---------------"
-        wp.pwmWrite(PWM_R, R_pwm_speed)
-        wp.pwmWrite(PWM_L, L_pwm_speed)
-        sleep(0.1)
-        right_count = x.get_right_wheel_count()
-        print "right_count: ", right_count
-        left_count = x.get_left_wheel_count()
-        print "left_count: ", left_count
-        
-        right_error = RIGHT_GOAL_COUNT - abs(right_count - init_Rcount)
-        print "right_error: ", right_error
-        left_error = LEFT_GOAL_COUNT - abs(left_count - init_Lcount)
-        print "left error: ", left_error
-    
-    wp.pwmWrite(PWM_R, 0)
+    wp.pwmWrite(PWM_L, 600)
+    wp.pwmWrite(PWM_R, 600)
+    sleep(time_turn)
     wp.pwmWrite(PWM_L, 0)
-
-
-
+    wp.pwmWrite(PWM_R, 0)
+    print 'turn right'
 
 
 def turnRobotAround():

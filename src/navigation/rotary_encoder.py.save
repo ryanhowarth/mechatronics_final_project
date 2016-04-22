@@ -125,8 +125,7 @@ if __name__ == "__main__":
 
    pi = pigpio.pi()
 
-   decoder = rotary_encoder.decoder(pi, 20, 26, callback) #pin A=38  pin B=37
-
+   decoder_left_motor = rotary_encoder.decoder(pi, 20, 26, callback) #pin A=38  pin B=37
    time.sleep(300)
 
    decoder.cancel()

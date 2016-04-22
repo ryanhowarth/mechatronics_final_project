@@ -37,8 +37,9 @@ class easy_pixy():
             return -1
         return self.blocks
 
-#x = easy_pixy()
-#while 1:
-#    x.get_blocks()
-#    time.sleep(1)
+if __name__ == "__main__":
+    x = easy_pixy()
+    while 1:
+	x.get_blocks()
+	time.sleep(0.1)
 
