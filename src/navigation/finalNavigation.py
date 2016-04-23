@@ -156,7 +156,7 @@ def moveRobotForward():
 	forwardRmotor()
 	forwardLmotor()
 	print "#########MOVING FORWARD############"
-	move_robot(400, 400)
+	move_robot(1000, 1000)
 
 def turnRobotLeft():
 	forwardRmotor()
@@ -201,15 +201,21 @@ def move_robot(left_goal, right_goal):
 		right_ir = ir_data[2]
 		if (left_ir < 20):
 			if (left_ir > 8):
-				L_pwm_speed -= 10
+				R_pwm_speed += 5
 				print "DECREASING LEFT SPEED"
-		elif(left_ir > 2 and left_ir < 5):
-			L_pwm_speed +=5
+			elif(left_ir > 2 and left_ir < 5):
+				L_pwm_speed +=5
+			else:
+				R_pwm_speed = 100
+				L_pwm_speed = 100
 		elif (right_ir < 20):
 			if (right_ir > 8):
-				R_pwm_speed -= 10
+				L_pwm_speed += 5
 			elif (right_ir > 2 and right_ir < 5):
 				R_pwm_speed += 5
+			else:
+				R_pwm_speed = 100
+				L_pwm_speed = 100
 
         	if R_pwm_speed > 250:
         		R_pwm_speed = 250
@@ -229,7 +235,7 @@ def move_robot(left_goal, right_goal):
         	print "---------------"
         	wp.pwmWrite(PWM_R, R_pwm_speed)
         	wp.pwmWrite(PWM_L, L_pwm_speed)
-        	sleep(0.1)
+        	sleep(0.25)
 
 		right_count = x.get_right_wheel_count()
 		print "right_count: ", right_count
