@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from time import sleep
 import wiringpi as wp
+import motor
 
 #left motor
 PWM_L = 12  #pin 32 
@@ -12,9 +13,8 @@ PWM_R = 13 #pin 33
 INPUT_1_RIGHT = 11 #pin 23 
 INPUT_2_RIGHT = 9 #pin 21
 
-motorL = motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
-motorR = motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
-
+motorL = motor.motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
+motorR = motor.motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
 
 time_turn = .075
 time_forward = .2
@@ -25,24 +25,20 @@ def moveRobotForward():
     motorL.forward()
     motorR.forward()
     print '#########MOVING FORWARD############'
-    sleep(1)
 
 def turnRobotLeft():
     motorL.backward()
     motorR.forward()
     print '#######TURNING LEFT############'
-    sleep(1)
 
 def turnRobotRight():
     # Turn robot 90 degrees right
     motorL.forward()
     motorR.backward()
     print '##########TURNING RIGHT#########'
-    sleep(1)
 
 def turnRobotAround():
     # Turn robot 180 degrees when deadend is found
-    print 'turn around'
     turnRobotLeft()
     turnRobotLeft()
 
@@ -66,20 +62,20 @@ try:
         print 'begin' 
 
         moveRobotForward()
-        stopMotors()
+        #stopMotors()
         sleep(2)
 
-		turnRobotLeft()
-        stopMotors()
-		sleep(2)
+	turnRobotLeft()
+        #stopMotors()
+	sleep(2)
 
-		turnRobotRight()
-        stopMotors()
-		sleep(2)
+	turnRobotRight()
+        #stopMotors()
+	sleep(2)
 
-		turnRobotAround()
-        stopMotors()
-		sleep(2)
+	turnRobotAround()
+        #stopMotors()
+	sleep(2)
 
 finally: 
 	shutoffRobot()
