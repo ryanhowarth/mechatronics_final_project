@@ -19,7 +19,7 @@ motorR = motor.motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
 time_turn = .075
 time_forward = .2
 
-wp.wiringPiSetupGpio()
+OFF = 0
 def moveRobotForward():
     # Move robot forward one grid space
     motorL.forward()
@@ -49,10 +49,10 @@ def stopMotors():
 def shutoffRobot():
     wp.pwmWrite(PWM_L, OFF)
     wp.pwmWrite(PWM_R, OFF)
-    wp.digitalWrite(INPUT_2_LEFT_MOTOR, OFF)
-    wp.digitalWrite(INPUT_1_LEFT_MOTOR, OFF)
-    wp.digitalWrite(INPUT_1_RIGHT_MOTOR, OFF)
-    wp.digitalWrite(INPUT_2_RIGHT_MOTOR, OFF)
+    wp.digitalWrite(INPUT_2_LEFT, OFF)
+    wp.digitalWrite(INPUT_1_LEFT, OFF)
+    wp.digitalWrite(INPUT_1_RIGHT, OFF)
+    wp.digitalWrite(INPUT_2_RIGHT, OFF)
     print 'turn off'
 
 try: 

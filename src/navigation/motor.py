@@ -1,6 +1,6 @@
 import wiringpi as wp
 
-
+wp.wiringPiSetupGpio()
 
 INPUT_MODE = 0
 OUTPUT_MODE = 1
@@ -14,24 +14,20 @@ LOW = 0
 
 class motor():
 
-	outA = 0
-	outB = 0
-	pwm = 0
-
 	def __init__(self, outputPinA, outputPinB, pwmPin):
 
-		outA = outputPinA
-		outB = outputPinB
-		wp.pinMode(outA, OUTPUT_MODE)
-		wp.pinMode(outB, OUTPUT_MODE)
+		self.outA = outputPinA
+		self.outB = outputPinB
+		wp.pinMode(self.outA, OUTPUT_MODE)
+		wp.pinMode(self.outB, OUTPUT_MODE)
 		self.forward()
 
 		wp.pwmSetMode(0)
 		wp.pwmSetClock(400)
 		wp.pwmSetRange(PWM_MAX)
 
-		pwm = pwmPin
-		wp.pinMode(pwm, PWM_MODE)
+		self.pwm = pwmPin
+		wp.pinMode(self.pwm, PWM_MODE)
 		self.setSpeed(PWM_MIN)
 
 	def __del__(self):
@@ -46,8 +42,9 @@ class motor():
 	def forward(self):
 		wp.digitalWrite(self.outA, LOW)
 		wp.digitalWrite(self.outB, HIGH)
-
+	
 	def backward(self):
+		
 		wp.digitalWrite(self.outA, HIGH)
 		wp.digitalWrite(self.outB, LOW)
 
@@ -60,6 +57,11 @@ class motor():
 			speed = PWM_MIN
 
 		wp.pwmWrite(self.pwm, speed)
+
+	def getPins(self):
+		print self.outA
+		print self.outB
+		print self.pwm
 
 	def stop(self):
 		wp.pwmWrite(self.pwm, PWM_MIN)
