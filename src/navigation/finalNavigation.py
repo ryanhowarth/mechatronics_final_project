@@ -8,6 +8,7 @@ import Adafruit_PCA9685
 import pigpio
 import rotary_encoder
 import pid_control
+import motor
 
 
 #encoders 
@@ -22,24 +23,25 @@ irSensors = ADS1x15(ic=0x00)
 
 #pwm
 servoControl = Adafruit_PCA9685.PCA9685()
-
+'''
 #left motor
 PWM_L = 12  #pin 32 
-INPUT_1_LEFT_MOTOR = 8 #pin 24
-INPUT_2_LEFT_MOTOR = 25 #pin 22
+INPUT_1_LEFT = 8 #pin 24
+INPUT_2_LEFT = 25 #pin 22
 
 #right motor
 PWM_R = 13 #pin 33
-INPUT_1_RIGHT_MOTOR = 11 #pin 23 
-INPUT_2_RIGHT_MOTOR = 9 #pin 21
+INPUT_1_RIGHT = 11 #pin 23 
+INPUT_2_RIGHT = 9 #pin 21
+'''
+
+motorL = motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
+motorR = motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
 
 time_turn = .15
 time_forward = .4
 speedL = 100
 speedR = 100 
-
-GIFT_PIN = 20 #pin 38
-TREE_PIN = 21 #pin 21
 
 SERVO_LIFT = 0
 SERVO_PINCH = 7
@@ -58,6 +60,7 @@ PWM_MODE = 2
 
 wp.wiringPiSetupGpio()
 
+'''
 #enable PWM_L
 wp.pinMode(PWM_L, PWM_MODE)  #set pin to pwm mode
 wp.pwmWrite(PWM_L, 0)
@@ -74,9 +77,6 @@ wp.pinMode(INPUT_2_LEFT_MOTOR, OUTPUT_MODE)
 wp.pinMode(INPUT_1_RIGHT_MOTOR, OUTPUT_MODE)
 wp.pinMode(INPUT_2_RIGHT_MOTOR, OUTPUT_MODE)
 
-wp.pinMode(GIFT_PIN, INPUT_MODE)
-wp.pinMode(TREE_PIN, INPUT_MODE)
-
 wp.pinMode(12, PWM_MODE)
 wp.pinMode(13, PWM_MODE)
 wp.pwmSetMode(0)
@@ -84,6 +84,8 @@ wp.pwmSetClock(400)
 wp.pwmSetRange(1024)
 wp.pwmWrite(12,0)
 wp.pwmWrite(13,0) 
+'''
+
 
 class easy_encoders():
 
@@ -130,7 +132,7 @@ class easy_encoders():
 x = easy_encoders()
 
 
-
+'''
 def forwardLmotor():
 	wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
 	wp.digitalWrite(INPUT_2_LEFT_MOTOR, 1)
@@ -146,11 +148,12 @@ def forwardRmotor():
 def backwardRmotor():
 	wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 1)
 	wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
-
+'''
 
 right_PID_Obj = pid_control.easy_PID(.75, .02, .1)
 left_PID_Obj = pid_control.easy_PID(.75, .02, .1)
 
+'''
 def moveRobotForward():
 	# Move robot forward one grid space
 	forwardRmotor()
@@ -158,17 +161,43 @@ def moveRobotForward():
 	print "#########MOVING FORWARD############"
 	move_robot(1000, 1000)
 
+'''
+
+def moveRobotForward():
+	# Move robot forward one grid space
+	motorL.forward()
+	motorR.forward()
+	print '#########MOVING FORWARD############'
+	move_robot(1000, 1000)
+
+'''
 def turnRobotLeft():
 	forwardRmotor()
 	backwardLmotor()
-	print "#######TURNING LEFT############"
+	print '#######TURNING LEFT############'
+	move_robot(220, 196)
+'''
+
+def turnRobotLeft():
+	motorL.backward()
+	motorR.forward()
+	print '#######TURNING LEFT############'
 	move_robot(220, 196)
 
+'''
 def turnRobotRight():
 	# Turn robot 90 degrees right
 	forwardLmotor()
 	backwardRmotor()
-	print ("##########TURNING RIGHT#########")
+	print '##########TURNING RIGHT#########'
+	move_robot(196, 220)
+'''
+
+def turnRobotRight():
+	# Turn robot 90 degrees right
+	motorL.forward()
+	motorR.backward()
+	print '##########TURNING RIGHT#########'
 	move_robot(196, 220)
 
 def move_robot(left_goal, right_goal):
@@ -233,8 +262,12 @@ def move_robot(left_goal, right_goal):
         	print "Right PWM: ", R_pwm_speed
         	print "Left PWM: ", L_pwm_speed
         	print "---------------"
-        	wp.pwmWrite(PWM_R, R_pwm_speed)
-        	wp.pwmWrite(PWM_L, L_pwm_speed)
+
+        	motorL.setSpeed(L_pwm_speed)
+        	motorR.setSpeed(R_pwm_speed)
+        	#wp.pwmWrite(PWM_R, R_pwm_speed)
+        	#wp.pwmWrite(PWM_L, L_pwm_speed)
+
         	sleep(0.25)
 
 		right_count = x.get_right_wheel_count()
@@ -247,8 +280,10 @@ def move_robot(left_goal, right_goal):
 		left_error = LEFT_GOAL_COUNT - abs(left_count - init_Lcount)
 		print "left error: ", left_error
 
-	wp.pwmWrite(PWM_R, 0)
-	wp.pwmWrite(PWM_L, 0)
+	motorL.stop()
+	motorR.stop()
+	#wp.pwmWrite(PWM_R, 0)
+	#wp.pwmWrite(PWM_L, 0)
 
 def get_ir_sensor_data(irSensors):
 	# Check surroundings for available paths
@@ -280,15 +315,6 @@ def turnRobotAround():
 	turnRobotLeft()
 	turnRobotLeft()
 	print 'turn around'
-
-def shutoffRobot():
-	wp.pwmWrite(PWM_L, 0)
-	wp.pwmWrite(PWM_R, 0)
-	wp.digitalWrite(INPUT_2_LEFT_MOTOR, 0)
-	wp.digitalWrite(INPUT_1_LEFT_MOTOR, 0)
-	wp.digitalWrite(INPUT_1_RIGHT_MOTOR, 0)
-	wp.digitalWrite(INPUT_2_RIGHT_MOTOR, 0)
-	print 'turn off'
 
 def update_intersection(irSensors):
 	# Check surroundings for available paths
@@ -371,7 +397,6 @@ def checkItem():
 		if giftFound:
 			dropGift()
 			giftDropped = True
-			k
 			
 		turnList = {1: 'G'}
 		turnIndex = 2
@@ -422,7 +447,6 @@ path_lst=[False,True,False]
 giftFound = False
 treeFound = False
 giftDropped = False
-
 
 # Create second node based on initialized tree_lst and path_lst
 mapping.node_proc(map_dic, tree_lst, path_lst)
