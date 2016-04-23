@@ -23,7 +23,7 @@ irSensors = ADS1x15(ic=0x00)
 
 #pwm
 servoControl = Adafruit_PCA9685.PCA9685()
-'''
+
 #left motor
 PWM_L = 12  #pin 32 
 INPUT_1_LEFT = 8 #pin 24
@@ -33,7 +33,6 @@ INPUT_2_LEFT = 25 #pin 22
 PWM_R = 13 #pin 33
 INPUT_1_RIGHT = 11 #pin 23 
 INPUT_2_RIGHT = 9 #pin 21
-'''
 
 motorL = motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
 motorR = motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
@@ -199,6 +198,10 @@ def turnRobotRight():
 	motorR.backward()
 	print '##########TURNING RIGHT#########'
 	move_robot(196, 220)
+
+def stopMotors():
+    motorL.stop()
+    motorR.stop()
 
 def move_robot(left_goal, right_goal):
 	# Turn robot 90 degrees left
