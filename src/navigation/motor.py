@@ -31,13 +31,14 @@ class motor():
 		self.setSpeed(PWM_MIN)
 
 	def __del__(self):
+		
+		wp.pwmWrite(self.pwm, PWM_MIN)
 		wp.digitalWrite(self.outA, LOW)
 		wp.digitalWrite(self.outB, LOW)
-		wp.pwmWrite(self.pwm, PWM_MIN)
 
+		wp.pinMode(self.pwm, INPUT_MODE)
 		wp.pinMode(self.outA, INPUT_MODE)
 		wp.pinMode(self.outB, INPUT_MODE)
-		wp.pinMode(self.pwm, INPUT_MODE)
 
 	def forward(self):
 		wp.digitalWrite(self.outA, LOW)
