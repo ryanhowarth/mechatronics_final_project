@@ -13,8 +13,8 @@ PWM_R = 13 #pin 33
 INPUT_1_RIGHT = 11 #pin 23 
 INPUT_2_RIGHT = 9 #pin 21
 
-motorL = motor.motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
-motorR = motor.motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
+motorL = Motor.motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
+motorR = Motor.motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
 
 time_turn = .075
 time_forward = .2
