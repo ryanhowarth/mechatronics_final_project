@@ -4,14 +4,14 @@ from time import sleep
 import Claw
 
 pixy_object = easy_pixy_test.easy_pixy()
-gift_right=150 #y < 160 when gift to right (camera is sideways)
-gift_left=160 #y > 180 when gift to left
-gift_near=240 #x > 220 when gift too close
-gift_far=220 #x < 200 when gift too far
-tree_right=150 #y < 160 when tree to right (camera is sideways)
-tree_left=160 #y > 180 when tree to left
-tree_near=240 #x > 220 when tree too close
-tree_far=220 #x < 200 when tree too far
+gift_right=150 #y < _ when gift to right (camera is sideways)
+gift_left=160 #y > _ when gift to left
+gift_near=250 #x > _ when gift too close
+gift_far=240 #x < _ when gift too far
+tree_right=150 #y < _ when tree to right (camera is sideways)
+tree_left=160 #y > _ when tree to left
+tree_near=250 #x > _ when tree too close
+tree_far=240 #x < _ when tree too far
 
 myClaw = Claw.claw(0,7)
 
@@ -27,6 +27,7 @@ def pixyDetectItem():
     else:
         return 'other'
 
+# Returns true if pickup or dropoff succesful
 def pixyApproach(item):
     x=pixy_object.get_blocks()
     if item=='tree':
@@ -75,6 +76,7 @@ def pixyApproach(item):
 flag=True
 while flag:
   item=pixyDetectItem()
+  print item
   if item=='gift':
       pickedup=False
       while not pickedup:
