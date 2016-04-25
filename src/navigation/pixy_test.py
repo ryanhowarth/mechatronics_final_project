@@ -16,8 +16,7 @@ tree_far=240 #x < _ when tree too far
 myClaw = Claw.claw(0,7)
 
 def pixyDetectItem():
-    x = pixy_object.get_blocks()
-    #print 'block: ' + str(x)
+    x = pixy_object.get_blocks_and_print()
     if x[0]==1:
         return 'tree'
     elif x[0]==2:
@@ -83,6 +82,7 @@ while flag:
         pickedup=pixyApproach('gift')
       dropped=False
       while not dropped:
-        dropped=pixyApproach('tree')
-      flag=False
-  sleep(1)
+        if pixyDetectItem()=='tree':
+          dropped=pixyApproach('tree')
+          flag=False
+  sleep(0.5)
