@@ -37,6 +37,7 @@ def pixyApproach(item):
             elif x[2]>=tree_right: 
                 #move right
                 print 'move right'
+            x=pixy_object.get_blocks()
         while x[1]<=tree_far or x[1]>=tree_near:
             if x[1]<=tree_far:
                 #move forward
@@ -44,9 +45,12 @@ def pixyApproach(item):
             elif x[1]>=tree_far:
                 #move back
                 print 'move back'
+            x=pixy_object.get_blocks()
+        # reached drop location
+        print 'Reached drop location'
         #dropGift()
         return 'drop'
-    elif item='gift':
+    elif item=='gift':
         while x[2]<=gift_left or x[2]>=gift_right:
             # adjust L/R until gift is in center (slowly)
             if x[2]<=gift_left:
@@ -55,6 +59,7 @@ def pixyApproach(item):
             elif x[2]>=gift_right: 
                 #move right
                 print 'move right'
+            x=pixy_object.get_blocks()
         while x[1]<=gift_far or x[1]>=gift_near:
             if x[1]<=gift_far:
                 #move forward
@@ -62,10 +67,16 @@ def pixyApproach(item):
             elif x[1]>=gift_far:
                 #move back
                 print 'move back'
+            x=pixy_object.get_blocks()
+        print 'Reached pickup location'
         #pickUpGift()
 	return 'pickup'
 
-while True:
-    print pixyDetectItem()
-    print pixyApproach()
-    sleep(0.5)
+flag=True
+while flag:
+    item=pixyDetectItem()
+    print item
+    result=pixyApproach(item)
+    if result=='pickup' or result=='drop':
+      flag==False
+    sleep(1)

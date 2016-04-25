@@ -7,7 +7,9 @@ def irDistLeft(volts):
 irSensor = ADS1x15(ic=0x00)
 
 while True:
-    v = irSensor.readADCSingleEnded(2,4096,250)/1000
-    print v
-    print irDistLeft(v)
-    sleep(1)
+    v0 = irSensor.readADCSingleEnded(0,4096,250)/1000
+#    v1 = irSensor.readADCSingleEnded(1,4096,250)/1000
+#    v2 = irSensor.readADCSingleEnded(2,4096,250)/1000
+    print  v0
+    print irDistLeft(v0)
+    sleep(.01)

@@ -34,8 +34,8 @@ PWM_R = 13 #pin 33
 INPUT_1_RIGHT = 11 #pin 23 
 INPUT_2_RIGHT = 9 #pin 21
 
-motorL = motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
-motorR = motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
+motorL = motor.motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
+motorR = motor.motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
 
 time_turn = .15
 time_forward = .4
@@ -57,9 +57,8 @@ INPUT_MODE = 0
 OUTPUT_MODE = 1
 PWM_MODE = 2
 
-wp.wiringPiSetupGpio()
-
 '''
+wp.wiringPiSetupGpio()
 #enable PWM_L
 wp.pinMode(PWM_L, PWM_MODE)  #set pin to pwm mode
 wp.pwmWrite(PWM_L, 0)
@@ -167,21 +166,21 @@ def moveRobotForward():
 	motorL.forward()
 	motorR.forward()
 	print '#########MOVING FORWARD############'
-	move_robot(1000, 1000)
+	move_robot(450, 450)
 
 '''
 def turnRobotLeft():
 	forwardRmotor()
 	backwardLmotor()
 	print '#######TURNING LEFT############'
-	move_robot(220, 196)
+	turn_robot(220, 196)
 '''
 
 def turnRobotLeft():
 	motorL.backward()
 	motorR.forward()
 	print '#######TURNING LEFT############'
-	move_robot(220, 196)
+	turn_robot(220, 196)
 
 '''
 def turnRobotRight():
@@ -189,7 +188,7 @@ def turnRobotRight():
 	forwardLmotor()
 	backwardRmotor()
 	print '##########TURNING RIGHT#########'
-	move_robot(196, 220)
+	turn_robot(196, 220)
 '''
 
 def turnRobotRight():
@@ -197,17 +196,82 @@ def turnRobotRight():
 	motorL.forward()
 	motorR.backward()
 	print '##########TURNING RIGHT#########'
-	move_robot(196, 220)
+	turn_robot(196, 220)
 
 def stopMotors():
     motorL.stop()
     motorR.stop()
 
+def turn_robot(left_goal, right_goal):
+	ir_data = get_ir_sensor_data(irSensors)
+        print (ir_data)
+        left_ir = ir_data[0]
+        middle_ir = ir_data[1]
+        right_ir = ir_data[2]
+        if middle_ir < 7:
+		motorL.backward()
+                motorR.backward()
+                motorL.setSpeed(int(500 ) )
+                motorR.setSpeed(int(500 ) )
+                sleep(.5)
+		motorL.stop()
+                motorR.stop()
+                motorL.forward()
+                motorR.forward()
+
+	init_Rcount = x.get_right_wheel_count()
+        init_Lcount = x.get_left_wheel_count()
+        print "init_Rcount: ", init_Rcount
+        print "init_Lcount: ", init_Lcount
+        LEFT_GOAL_COUNT = left_goal
+        RIGHT_GOAL_COUNT = right_goal
+        left_error = LEFT_GOAL_COUNT
+        right_error = RIGHT_GOAL_COUNT
+        loop_check = 0
+        right_PID_Obj.reset()
+        left_PID_Obj.reset()
+        while (left_error > 10) and (right_error > 10):
+                R_pwm_speed = right_PID_Obj.get_pwm(right_error)
+                L_pwm_speed = left_PID_Obj.get_pwm(left_error)
+                
+                if R_pwm_speed > 900:
+                        R_pwm_speed = 900
+                elif R_pwm_speed < 600:
+                        R_pwm_speed = 600
+                if L_pwm_speed > 900:
+                        L_pwm_speed = 900
+                elif L_pwm_speed < 600:
+                        L_pwm_speed = 600
+
+
+
+                print "------------IR DATA-------------"
+                print "---------------"
+                print "Right PWM: ", R_pwm_speed
+                print "Left PWM: ", L_pwm_speed
+                print "---------------"
+
+                motorL.setSpeed(int( L_pwm_speed ) )
+                motorR.setSpeed(int( R_pwm_speed ) )
+
+                right_count = x.get_right_wheel_count()
+                print "right_count: ", right_count
+                left_count = x.get_left_wheel_count()
+                print "left_count: ", left_count
+
+                right_error = RIGHT_GOAL_COUNT - abs(right_count - init_Rcount)
+                print "right_error: ", right_error
+                left_error = LEFT_GOAL_COUNT - abs(left_count - init_Lcount)
+                print "left error: ", left_error
+
+        motorL.stop()
+        motorR.stop()
+
 def move_robot(left_goal, right_goal):
 	# Turn robot 90 degrees left
 	#print "right wheel count: ", x.get_right_wheel_count()
 	#print "left wheel count: ", x.get_left_wheel_count()
-	#print "------------------"
+	#print "------------------" 
 	init_Rcount = x.get_right_wheel_count()
 	init_Lcount = x.get_left_wheel_count()
 	print "init_Rcount: ", init_Rcount
@@ -219,44 +283,57 @@ def move_robot(left_goal, right_goal):
 	loop_check = 0
 	right_PID_Obj.reset()
 	left_PID_Obj.reset()
-	R_pwm_speed = 100
-	L_pwm_speed = 100
 	while (left_error > 10) and (right_error > 10):
 		#R_pwm_speed = right_PID_Obj.get_pwm(right_error)
 		#L_pwm_speed = left_PID_Obj.get_pwm(left_error)
-		
+		R_pwm_speed  = 600
+		L_pwm_speed  = 600		
 		print "############### IR DATA ############"
 		ir_data = get_ir_sensor_data(irSensors)
 		print (ir_data)
 		left_ir = ir_data[0]
 		middle_ir = ir_data[1]
 		right_ir = ir_data[2]
+		if middle_ir < 7:
+			motorL.backward()
+			motorR.backward()
+			motorL.setSpeed(int( L_pwm_speed ) )
+                	motorR.setSpeed(int( R_pwm_speed ) )
+			sleep(1)
+			motorL.stop()
+			motorR.stop()
+			motorL.forward()
+			motorR.forward()
+			LEFT_GOAL_COUNT -= 30
+			RIGHT_GOAL_COUNT -= 30
 		if (left_ir < 20):
-			if (left_ir > 8):
-				R_pwm_speed += 5
-				print "DECREASING LEFT SPEED"
-			elif(left_ir > 2 and left_ir < 5):
-				L_pwm_speed +=5
+			if (left_ir > 7) and (left_ir < 8):
+				R_pwm_speed = R_pwm_speed - left_ir/5
+				print "TOWARDS RIGHT"
+			elif (left_ir >8) and (left_ir <14):
+				R_pwm_speed =  R_pwm_speed +left_ir/5
+				print "TOWARDS LEFT"
 			else:
 				R_pwm_speed = 100
 				L_pwm_speed = 100
 		elif (right_ir < 20):
-			if (right_ir > 8):
-				L_pwm_speed += 5
-			elif (right_ir > 2 and right_ir < 5):
-				R_pwm_speed += 5
+			if (right_ir > 7) and (right_ir < 8):
+				L_pwm_speed = L_pwm_speed - right_ir/5
+				print "TOWARDS LEFT"
+			elif (right_ir > 8) and (right_ir < 14):
+				L_pwm_speed = L_pwm_speed + right_ir/5
 			else:
 				R_pwm_speed = 100
 				L_pwm_speed = 100
 
-        	if R_pwm_speed > 250:
-        		R_pwm_speed = 250
-        	elif R_pwm_speed < 50:
-			R_pwm_speed = 50
-		if L_pwm_speed > 250:
-			L_pwm_speed = 250
-		elif L_pwm_speed < 50:
-			L_pwm_speed = 50
+        	if R_pwm_speed > 700:
+        		R_pwm_speed = 700
+        	elif R_pwm_speed < 500:
+			R_pwm_speed = 500
+		if L_pwm_speed > 700:
+			L_pwm_speed = 700
+		elif L_pwm_speed < 500:
+			L_pwm_speed = 500
 
 
 
@@ -266,12 +343,11 @@ def move_robot(left_goal, right_goal):
         	print "Left PWM: ", L_pwm_speed
         	print "---------------"
 
-        	motorL.setSpeed(L_pwm_speed)
-        	motorR.setSpeed(R_pwm_speed)
+        	motorL.setSpeed(int( L_pwm_speed ) )
+        	motorR.setSpeed(int( R_pwm_speed ) ) 
         	#wp.pwmWrite(PWM_R, R_pwm_speed)
-        	#wp.pwmWrite(PWM_L, L_pwm_speed)
-
-        	sleep(0.25)
+        	#wp.pwmWrite(PWM_L, L_pwm_spe
+        	sleep(.005)
 
 		right_count = x.get_right_wheel_count()
 		print "right_count: ", right_count
@@ -285,6 +361,7 @@ def move_robot(left_goal, right_goal):
 
 	motorL.stop()
 	motorR.stop()
+	sleep(0)
 	#wp.pwmWrite(PWM_R, 0)
 	#wp.pwmWrite(PWM_L, 0)
 
@@ -376,10 +453,16 @@ def irDistLeft(volts):
 	return 11.721 * volts**(-0.972)
 
 def irDistFront(volts):
-	return 11.721 * volts**(-0.972)
+	if volts == 0:
+		return 
+	else:
+		return 11.721 * volts**(-0.972)
 
 def irDistRight(volts):
-	return 11.721 * volts**(-0.972)
+	if volts == 0:
+		return 1
+	else:
+		return 11.721 * volts**(-0.972)
 
 
 def checkItem():
@@ -458,7 +541,7 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 mapping.print_node(map_dic)
 
 while True:
-	sleep(3)
+	sleep(.5)
 	moveRobotForward()
 
 	path_lst = update_intersection(irSensors)
