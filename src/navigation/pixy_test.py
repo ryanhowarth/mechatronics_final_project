@@ -3,20 +3,20 @@ from pixy import easy_pixy_test
 from time import sleep
 
 pixy_object = easy_pixy_test.easy_pixy()
-gift_left=160 #y < 160 when gift to left (camera is sideways)
-gift_right=180 #y > 180 when gift to right
-gift_near=220 #x > 220 when gift too close
-gift_far=200 #x < 200 when gift too far
-tree_right=160 #y < 160 when tree to right (camera is sideways)
-tree_left=180 #y > 180 when tree to left
-tree_near=220 #x > 220 when tree too close
-tree_far=200 #x < 200 when tree too far
+gift_left=150 #y < 160 when gift to left (camera is sideways)
+gift_right=160 #y > 180 when gift to right
+gift_near=240 #x > 220 when gift too close
+gift_far=220 #x < 200 when gift too far
+tree_right=150 #y < 160 when tree to right (camera is sideways)
+tree_left=160 #y > 180 when tree to left
+tree_near=240 #x > 220 when tree too close
+tree_far=220 #x < 200 when tree too far
 
 
 
 def pixyDetectItem():
     x = pixy_object.get_blocks()
-    #print 'block: ' + str(x)
+    print 'block: ', x
     if x[0]==1:
         return 'tree'
     elif x[0]==2:
