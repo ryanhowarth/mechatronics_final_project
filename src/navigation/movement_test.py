@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from time import sleep
 import wiringpi as wp
-import motor
+import Motor
 
 #left motor
 PWM_L = 12  #pin 32 
