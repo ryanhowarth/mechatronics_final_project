@@ -7,8 +7,8 @@ gift_left=160 #y < 160 when gift to left (camera is sideways)
 gift_right=180 #y > 180 when gift to right
 gift_near=220 #x > 220 when gift too close
 gift_far=200 #x < 200 when gift too far
-tree_left=160 #y < 160 when tree to left (camera is sideways)
-tree_right=180 #y > 180 when tree to right
+tree_right=160 #y < 160 when tree to right (camera is sideways)
+tree_left=180 #y > 180 when tree to left
 tree_near=220 #x > 220 when tree too close
 tree_far=200 #x < 200 when tree too far
 
@@ -29,14 +29,14 @@ def pixyDetectItem():
 def pixyApproach(item):
     x=pixy_object.get_blocks()
     if item=='tree':
-        while x[2]<=tree_left or x[2]>=tree_right:
+        while x[2]<=tree_right or x[2]>=tree_left:
             # adjust L/R until tree is in center (slowly)
-            if x[2]<=tree_left:
-                #move left
-                print 'move left'
-            elif x[2]>=tree_right: 
+            if x[2]<=tree_right:
                 #move right
                 print 'move right'
+            elif x[2]>=tree_left: 
+                #move right
+                print 'move left'
             x=pixy_object.get_blocks()
         while x[1]<=tree_far or x[1]>=tree_near:
             if x[1]<=tree_far:
@@ -48,6 +48,7 @@ def pixyApproach(item):
             x=pixy_object.get_blocks()
         # reached drop location
         print 'Reached drop location'
+        print 'block: ' + str(x)
         #dropGift()
         return 'drop'
     elif item=='gift':
