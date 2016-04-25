@@ -1,28 +1,21 @@
 #!/usr/bin/python
 import mapping
-from Adafruit_ADS1x15 import ADS1x15
-import wiringpi as wp
 from time import sleep 
 from pixy import easy_pixy
-import Adafruit_PCA9685
-import pigpio
-import rotary_encoder
-import pid_control
-import motor
+import Robot
 
+import signal
+import sys
 
-#encoders 
-pos = 1
-pos2  = 1
+def signal_handler(signal, frame):
+    print 'Exiting'
+    del robot
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 #Pixy 
 #pixy_object = easy_pixy.easy_pixy()
-
-# Initialize sensors
-irSensors = ADS1x15(ic=0x00)
-
-#pwm
-servoControl = Adafruit_PCA9685.PCA9685()
 
 #left motor
 PWM_L = 12  #pin 32 
@@ -34,6 +27,7 @@ PWM_R = 13 #pin 33
 INPUT_1_RIGHT = 11 #pin 23 
 INPUT_2_RIGHT = 9 #pin 21
 
+<<<<<<< HEAD
 motorL = motor.motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
 motorR = motor.motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
 
@@ -421,15 +415,25 @@ def update_intersection(irSensors):
 	print 'front: ' + str(final_distanceM)
 	
 	print 'right: ' + str(final_distanceR)
+=======
+SERVO_LIFT = 0
+SERVO_PINCH = 7
+
+robot = Robot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
+
+def update_intersection(robot):
+	distances = robot.getIrSensorData()
+>>>>>>> fb42803d276f47edef78194cf42b9768df896fa0
 
 	path_lst=[False]*3
 
-	path_lst[0] = final_distanceL > 20
-	path_lst[1] = final_distanceM > 20
-	path_lst[2] = final_distanceR > 20
+	path_lst[0] = distances[0] > 20
+	path_lst[1] = distances[1] > 20
+	path_lst[2] = distances[2] > 20
 	
 	return path_lst 
 
+<<<<<<< HEAD
 ''' 
 *** NOTE ***
 Left: Dark Green 2Y0A21
@@ -465,6 +469,8 @@ def irDistRight(volts):
 		return 11.721 * volts**(-0.972)
 
 
+=======
+>>>>>>> fb42803d276f47edef78194cf42b9768df896fa0
 def checkItem():
 	# Check if there's an item
 	itemFound = pixyDetectItem()
@@ -498,28 +504,6 @@ def pixyDetectItem():
 
 	return item
 
-def pickUpGift():
-	print 'picking up'
-	servoControl.set_pwm(SERVO_PINCH, 0, OPEN_SERVO)
-	sleep(1)
-	servoControl.set_pwm(SERVO_LIFT, 0, LOWER_SERVO)
-	sleep(1)
-	servoControl.set_pwm(SERVO_PINCH,0, CLOSE_SERVO)
-	sleep(1)
-	servoControl.set_pwm(SERVO_LIFT, 0, RAISE_SERVO)
-	sleep(1)
-
-def dropGift():
-	print 'dropping'
-	servoControl.set_pwm(SERVO_LIFT, 0, LOWER_SERVO)
-	sleep(1)
-	servoControl.set_pwm(SERVO_PINCH, 0, OPEN_SERVO)
-	sleep(1)
-	servoControl.set_pwm(SERVO_LIFT, 0, RAISE_SERVO)
-	sleep(1)
-	servoControl.set_pwm(SERVO_PINCH, 0, CLOSE_SERVO)
-	sleep(1)
-
 # Initialize first node
 map_dic={1:[[0,0,0],[0,0,0],0,'N']}
 
@@ -541,14 +525,19 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 mapping.print_node(map_dic)
 
 while True:
+<<<<<<< HEAD
 	sleep(.5)
 	moveRobotForward()
+=======
+	sleep(3)
+	robot.moveForward()
+>>>>>>> fb42803d276f47edef78194cf42b9768df896fa0
 
 	path_lst = update_intersection(irSensors)
 
 	# Check if left turn is available
 	if path_lst[0]:
-		turnRobotLeft()
+		robot.turnLeft()
 		
 		# If at an intersection, add node to structure
 		if path_lst[1] or path_lst[2]:
@@ -581,7 +570,7 @@ while True:
 
 	# Check if right is available
 	elif path_lst[2]:
-		turnRobotRight()
+		robot.turnRight()
 
 		# Mark opposite turn if tree is found
 		if treeFound:
@@ -594,6 +583,8 @@ while True:
 
 	# Deadend has been reached
 	else:
+
+		robot.turnAround()
 
 		# Swap current node and previous node
 		temp = tree_lst[1]

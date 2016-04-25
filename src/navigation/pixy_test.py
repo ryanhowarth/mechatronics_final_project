@@ -48,7 +48,7 @@ def pixyApproach(item):
             x=pixy_object.get_blocks()
         # reached drop location
         print 'Reached drop location'
-        print 'block: ' + str(x)
+        print 'block: ',x
         #dropGift()
         return 'drop'
     elif item=='gift':
