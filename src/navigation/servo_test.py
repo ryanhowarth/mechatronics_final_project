@@ -4,11 +4,11 @@ import Adafruit_PCA9685 as ADA
 
 pwm = ADA.PCA9685()
 
-servo_min = 260
+servo_min = 200
 servo_max = 400
  
-PWM_SERVO1 = 0
-
+#PWM_SERVO1 = 0
+PWM_SERVO1 = 7
 pwm.set_pwm_freq(60)
 
 try: 

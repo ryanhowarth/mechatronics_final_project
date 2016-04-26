@@ -3,18 +3,18 @@ import Claw
 import Encoders
 import pid_control
 from Adafruit_ADS1x15 import ADS1x15
+from time import sleep
 
-COUNTS_FORWARD = 1000
+COUNTS_FORWARD = 600
 COUNTS_TURN_MAX = 220
 COUNTS_TURN_MIN = 196
 
-PWM_DEFAULT = 100
-PWM_MAX = 250
-PWM_MIN = 50
-PWM_INCREMENT = 5
+PWM_DEFAULT = 500
+PWM_MAX = 700
+PWM_MIN = 300
 
 IR_GAIN = 4096
-IR_SPS = 250
+IR_SPS = 500
 IR_LEFT = 0
 IR_MIDDLE = 1
 IR_RIGHT = 2
@@ -31,7 +31,7 @@ class robot():
 		self.leftMotor = Motor.motor(leftMotorOutA, leftMotorOutB, leftPwm)
 		self.rightMotor = Motor.motor(rightMotorOutA, rightMotorOutB, rightPwm)
 
-		self.claw = Claw.claw(self, liftServoPin, pinchServoPin)
+		self.claw = Claw.claw(liftServoPin, pinchServoPin)
 
 		self.irSensors = ADS1x15(ic=0x00)
 
@@ -82,7 +82,7 @@ class robot():
 		self.turnLeft()
 		self.turnLeft()
 
-	def move_robot(left_goal, right_goal):
+	def move_robot(self,left_goal, right_goal):
 
 		init_Rcount = self.encoders.get_right_wheel_count()
 		init_Lcount = self.encoders.get_left_wheel_count()
@@ -96,8 +96,6 @@ class robot():
 		loop_check = 0
 		self.rightPid.reset()
 		self.leftPid.reset()
-		R_pwm_speed = PWM_DEFAULT
-		L_pwm_speed = PWM_DEFAULT
 
 		while (left_error > 10) and (right_error > 10):
 			#R_pwm_speed = self.rightPid.get_pwm(right_error)
@@ -108,23 +106,37 @@ class robot():
 			print (ir_data)
 			left_ir = ir_data[0]
 			right_ir = ir_data[2]
+			
+			R_pwm_speed = PWM_DEFAULT
 
-			if (left_ir < 20):
-				if (left_ir > 8):
-					R_pwm_speed += PWM_INCREMENT
-				elif(left_ir > 2 and left_ir < 5):
-					L_pwm_speed += PWM_INCREMENT
+			L_pwm_speed = PWM_DEFAULT
+
+			if (left_ir < right_ir):
+				if (left_ir > 9.5) and (left_ir < 10):
+					if left_ir >8:	
+						left_ir == 8 
+					R_pwm_speed += left_ir*.65
+					print "TURNING TOWARDS LEFT WALL"
+				elif(left_ir > 5.5) and (left_ir < 8):
+					L_pwm_speed += left_ir*1.25
+					print "TURNING AWAY LEFT WALL"
+				elif (left_ir < 5.5):
+					L_pwm_speed += 8
 				else:
-					R_pwm_speed = PWM_DEFAULT
-					L_pwm_speed = PWM_DEFAULT
-			elif (right_ir < 20):
-				if (right_ir > 8):
-					L_pwm_speed += PWM_INCREMENT
-				elif (right_ir > 2 and right_ir < 5):
-					R_pwm_speed += PWM_INCREMENT
+					print "nothing being done"
+			elif (right_ir < left_ir):
+				if (right_ir > 9.5) and (right_ir < 10):
+					if right_ir >8:
+						right_ir = 8
+					L_pwm_speed += right_ir*.65
+					print "TURNING TOWARDS RIGHT WALL"
+				elif (right_ir > 5.5) and (right_ir < 8):
+					R_pwm_speed += right_ir*1.25
+					print "TURNING AWAY RIGHT WALL"
+				elif (right_ir <5.5):
+					R_pwm_speed += 8
 				else:
-					R_pwm_speed = PWM_DEFAULT
-					L_pwm_speed = PWM_DEFAULT
+					print "nothing being done"
 
 			if R_pwm_speed > PWM_MAX:
 				R_pwm_speed = PWM_MAX
@@ -135,25 +147,26 @@ class robot():
 			elif L_pwm_speed < PWM_MIN:
 				L_pwm_speed = PWM_MIN
 
-			print "Right PWM: ", R_pwm_speed
-			print "Left PWM: ", L_pwm_speed
+			print "Right PWM: ", int(R_pwm_speed)
+			print "Left PWM: ",int( L_pwm_speed)
 
-			self.leftMotor.setSpeed(L_pwm_speed)
-			self.rightMotor.setSpeed(R_pwm_speed)
+			self.leftMotor.setSpeed(int(L_pwm_speed))
+			self.rightMotor.setSpeed(int(R_pwm_speed))
 
-	       	sleep(0.25)
-
+	       		sleep(0.005)
+		
 			right_count = self.encoders.get_right_wheel_count()
-	        print "right_count: ", right_count
-	        left_count = self.encoders.get_left_wheel_count()
-	        print "left_count: ", left_count
+	        	print "right_count: ", right_count
+	        	left_count = self.encoders.get_left_wheel_count()
+	        	print "left_count: ", left_count
 
-	       	right_error = right_goal - abs(right_count - init_Rcount)
-	       	print "right_error: ", right_error
-	       	left_error = left_goal - abs(left_count - init_Lcount)
-	       	print "left error: ", left_error
+	       		right_error = right_goal - abs(right_count - init_Rcount)
+	       		print "right_error: ", right_error
+	       		left_error = left_goal - abs(left_count - init_Lcount)
+	       		print "left error: ", left_error
 
-	       	self.stop()
+	       		#self.stop()
+			#sleep(.005)
 
 	def stop(self):
 
@@ -166,15 +179,15 @@ class robot():
 		distanceM = []
 		distanceR = []
 
-		for i in xrange(5):
+		for i in xrange(20):
 			voltsL = self.irSensors.readADCSingleEnded(IR_LEFT, IR_GAIN, IR_SPS)/1000
-			distanceL.append(irDist(voltsL))
+			distanceL.append(self.irDist(voltsL))
 
 			voltsM = self.irSensors.readADCSingleEnded(IR_MIDDLE, IR_GAIN, IR_SPS)/1000
-			distanceM.append(irDist(voltsM))
+			distanceM.append(self.irDist(voltsM))
 
 			voltsR = self.irSensors.readADCSingleEnded(IR_RIGHT, IR_GAIN, IR_SPS)/1000
-			distanceR.append(irDist(voltsR))
+			distanceR.append(self.irDist(voltsR))
 
 			sleep(.005)
 
@@ -185,7 +198,7 @@ class robot():
 		return [finalDistL, finalDistM, finalDistR] 
 
 	''' TODO: Calibrate for each sensor '''
-	def irDist(volts):
+	def irDist(self, volts):
 		return 11.721 * volts**(-0.972)
 
 	def pickupGift(self):

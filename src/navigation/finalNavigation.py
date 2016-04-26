@@ -97,7 +97,7 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 mapping.print_node(map_dic)
 
 while True:
-	sleep(3)
+	sleep(.5)
 	robot.moveForward()
 
 	path_lst = update_intersection(irSensors)

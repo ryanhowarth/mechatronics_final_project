@@ -20,14 +20,20 @@ class claw():
 
 	def __del__(self):
 		self.resetClaw()
-		
+		self.turnOffClaw()
+
 		del self.servoControl
+
+	def turnOffClaw(self):
+		self.servoControl.set_pwm(self.pinchServo, 0, 0)
+		self.servoControl.set_pwm(self.liftServo, 0, 0)
 
 	def getPins(self):
 		print self.liftServo
 		print self.pinchServo
     
 	def resetClaw(self):
+		
 		self.servoControl.set_pwm(self.pinchServo, 0, CLOSE_SERVO)
 		sleep(0.25)
 		self.servoControl.set_pwm(self.liftServo, 0, RAISE_SERVO)
