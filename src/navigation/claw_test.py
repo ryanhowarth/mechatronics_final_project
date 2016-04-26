@@ -9,7 +9,7 @@ myClaw.getPins()
 
 while True:
     myClaw.pickupGift()
-    sleep(1)
+    sleep(3)
 
     myClaw.dropGift()
-    sleep(1)
+    sleep(3)

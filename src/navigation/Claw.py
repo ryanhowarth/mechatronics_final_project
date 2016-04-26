@@ -5,7 +5,7 @@ LOWER_PICKUP = 175
 LOWER_DROP = 220
 RAISE_SERVO = 400
 OPEN_SERVO = 400
-CLOSE_SERVO = 260
+CLOSE_SERVO = 275
 
 class claw():
 
@@ -20,13 +20,8 @@ class claw():
 
 	def __del__(self):
 		self.resetClaw()
-		self.turnOffClaw()
 
 		del self.servoControl
-
-	def turnOffClaw(self):
-		self.servoControl.set_pwm(self.pinchServo, 0, 0)
-		self.servoControl.set_pwm(self.liftServo, 0, 0)
 
 	def getPins(self):
 		print self.liftServo
@@ -39,6 +34,7 @@ class claw():
 		self.servoControl.set_pwm(self.liftServo, 0, RAISE_SERVO)
 		sleep(0.25)
 
+		self.turnOffClaw()
 
 	def pickupGift(self):
 		print 'picking up'
@@ -52,6 +48,8 @@ class claw():
 		self.servoControl.set_pwm(self.liftServo, 0, RAISE_SERVO)
 		sleep(1)
 
+#		self.turnOffClaw()
+
 	def dropGift(self):
 		print 'dropping'
 
@@ -63,3 +61,11 @@ class claw():
 		sleep(1)
 		self.servoControl.set_pwm(self.pinchServo, 0, CLOSE_SERVO)
 		sleep(1)
+
+ 		self.turnOffClaw()
+
+	def turnOffClaw(self):
+		self.servoControl.set_pwm(self.pinchServo, 0, 0)
+		self.servoControl.set_pwm(self.liftServo, 0, 0)
+
+

@@ -43,19 +43,19 @@ def pixyApproach(item):
         d = irDistLeft(v)
         while (x[2]<=tree_right or x[2]>=tree_left) or (d<=far or d>=near):
             while x[2]<=tree_right:
-                print 'move right'
+                print 'R'
                 x=pixy_object.get_blocks()
             while x[2]>=tree_left:
-                print 'move left'
+                print 'L'
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
             d = irDistLeft(v)
             if d<far and d>near:
                 break
             if d>=far:
-                print 'move forward'
+                print 'F'
             if d<=near:
-                print 'move back'
+                print 'B'
             x=pixy_object.get_blocks()
  #       '''    
  #       while x[2]<=tree_right or x[2]>=tree_left:
@@ -84,19 +84,19 @@ def pixyApproach(item):
         d = irDistLeft(v)
         while (x[2]<=gift_right or x[2]>=gift_left) or (d<=far or d>=near):
             while x[2]<=gift_right:
-                print 'move right'
+                print 'R'
                 x=pixy_object.get_blocks()
             while x[2]>=gift_left:
-                print 'move left'
+                print 'L'
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
             d = irDistLeft(v)
             if d<far and d>near:
                 break
             if d>=far:
-                print 'move forward'
+                print 'F'
             if d<=near:
-                print 'move back'
+                print 'B'
             x=pixy_object.get_blocks()
 #        '''
 #        while x[2]<=gift_right or x[2]>=gift_left:
