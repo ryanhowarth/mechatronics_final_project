@@ -5,17 +5,15 @@ from Adafruit_ADS1x15 import ADS1x15
 import Claw
 
 pixy_object = easy_pixy_test.easy_pixy()
-gift_right=140 #y < _ when gift to right (camera is sideways)
-gift_left=170 #y > _ when gift to left
-#gift_near=250 #x > _ when gift too close
-#gift_far=240 #x < _ when gift too far
-tree_right=140 #y < _ when tree to right (camera is sideways)
-tree_left=170 #y > _ when tree to left
-#tree_near=250 #x > _ when tree too close
-#tree_far=240 #x < _ when tree too far
-far=5.5
-near=5.3
-front_ir=1
+gift_right=100 #y < _ when gift to right (camera is sideways)
+gift_left=120 #y > _ when gift to left
+tree_right=100 #y < _ when tree to right (camera is sideways)
+tree_left=120 #y > _ when tree to left
+gift_far=12.5
+gift_near=10.5
+tree_far=12.5
+gift_near=10.5
+front_ir=2
 
 myClaw = Claw.claw(0,7)
 irSensor = ADS1x15(ic=0x00)
@@ -43,39 +41,21 @@ def pixyApproach(item):
         d = irDistLeft(v)
         while (x[2]<=tree_right or x[2]>=tree_left) or (d<=far or d>=near):
             while x[2]<=tree_right:
-                print 'R'
+                print 'Right'
                 x=pixy_object.get_blocks()
             while x[2]>=tree_left:
-                print 'L'
+                print 'Left'
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
             d = irDistLeft(v)
-            if d<far and d>near:
+            print d
+            if d<tree_far and d>tree_near:
                 break
-            if d>=far:
-                print 'F'
-            if d<=near:
-                print 'B'
+            if d>=tree_far:
+                print 'Forward'
+            if d<=tree_near:
+                print 'Back'
             x=pixy_object.get_blocks()
- #       '''    
- #       while x[2]<=tree_right or x[2]>=tree_left:
- #           # adjust L/R until tree is in center (slowly)
- #           if x[2]<=tree_right:
- #               #move right
- #               print 'move right'
- #           elif x[2]>=tree_left: 
- #               #move left
- #               print 'move left'
- #           x=pixy_object.get_blocks()
- #       while x[1]<=tree_far or x[1]>=tree_near:
- #           if x[1]<=tree_far:
- #               #move forward
- #               print 'move forward'
- #           elif x[1]>=tree_far:
- #               #move back
- #               print 'move back'
- #           x=pixy_object.get_blocks()
- #       '''
         print 'Reached dropoff location'
         myClaw.dropGift()
         return True
@@ -84,39 +64,21 @@ def pixyApproach(item):
         d = irDistLeft(v)
         while (x[2]<=gift_right or x[2]>=gift_left) or (d<=far or d>=near):
             while x[2]<=gift_right:
-                print 'R'
+                print 'Right'
                 x=pixy_object.get_blocks()
             while x[2]>=gift_left:
-                print 'L'
+                print 'Left'
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
             d = irDistLeft(v)
-            if d<far and d>near:
+            print d
+            if d<gift_far and d>gift_near:
                 break
-            if d>=far:
-                print 'F'
-            if d<=near:
-                print 'B'
+            if d>=gift_far:
+                print 'Forward'
+            if d<=gift_near:
+                print 'Back'
             x=pixy_object.get_blocks()
-#        '''
-#        while x[2]<=gift_right or x[2]>=gift_left:
-#            # adjust L/R until gift is in center (slowly)
-#            if x[2]<=gift_right:
-#                #move right
-#                print 'move right'
-#            elif x[2]>=gift_left: 
-#                #move left
-#                print 'move left'
-#            x=pixy_object.get_blocks()
-#        while x[1]<=gift_far or x[1]>=gift_near:
-#            if x[1]<=gift_far:
-#                #move forward
-#                print 'move forward'
-#            elif x[1]>=gift_far:
-#                #move back
-#                print 'move back'
-#            x=pixy_object.get_blocks()
-#        '''
         print 'Reached pickup location'
         myClaw.pickupGift()
 	return True
