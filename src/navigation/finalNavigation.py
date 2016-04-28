@@ -17,15 +17,15 @@ signal.signal(signal.SIGINT, signal_handler)
 #Pixy 
 #pixy_object = easy_pixy.easy_pixy()
 
-#left motor
-PWM_L = 12  #pin 32 
-INPUT_1_LEFT = 8 #pin 24
-INPUT_2_LEFT = 25 #pin 22
+#Right  motor
+PWM_R = 12  #pin 32 
+INPUT_1_RIGHT = 25 #pin 22
+INPUT_2_RIGHT = 8 #pin 24
 
 #right motor
-PWM_R = 13 #pin 33
-INPUT_1_RIGHT = 11 #pin 23 
-INPUT_2_RIGHT = 9 #pin 21
+PWM_L = 13 #pin 33
+INPUT_1_LEFT = 11 #pin 23 
+INPUT_2_LEFT = 9 #pin 21
 
 SERVO_LIFT = 0
 SERVO_PINCH = 7
@@ -36,10 +36,8 @@ def update_intersection(robot):
 	distances = robot.getIrSensorData()
 
 	path_lst=[False]*3
-
-	path_lst[0] = distances[0] > 20
-	path_lst[1] = distances[1] > 20
-	path_lst[2] = distances[2] > 20
+	for i in xrange(3):
+	    path_lst[i] = distances[i] > 20
 	
 	return path_lst 
 
@@ -96,16 +94,19 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 # Print current structure
 mapping.print_node(map_dic)
 
-while True:
-	sleep(.5)
-	robot.moveForward()
+prev_decision = -1
 
-	path_lst = update_intersection(irSensors)
+while True:
+	sleep(3)
+	robot.moveForward(prev_decision)
+	robot.step_forward()
+
+	path_lst = update_intersection(robot)
 
 	# Check if left turn is available
 	if path_lst[0]:
 		robot.turnLeft()
-		
+		prev_decision = 0
 		# If at an intersection, add node to structure
 		if path_lst[1] or path_lst[2]:
 			mapping.node_proc(map_dic, tree_lst, path_lst)
@@ -138,6 +139,7 @@ while True:
 	# Check if right is available
 	elif path_lst[2]:
 		robot.turnRight()
+		prev_decision = 2
 
 		# Mark opposite turn if tree is found
 		if treeFound:
@@ -152,7 +154,7 @@ while True:
 	else:
 
 		robot.turnAround()
-
+		prev_decision = -1
 		# Swap current node and previous node
 		temp = tree_lst[1]
 		tree_lst[1] = tree_lst[0]
@@ -160,6 +162,4 @@ while True:
 
 		# Change direction
 		tree_lst[2] = 'b'
-
-
-
+	#robot.step_forward()

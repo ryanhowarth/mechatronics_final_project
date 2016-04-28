@@ -4,14 +4,14 @@ import wiringpi as wp
 import Motor
 
 #left motor
-PWM_L = 12  #pin 32 
-INPUT_1_LEFT = 8 #pin 24
-INPUT_2_LEFT = 25 #pin 22
+PWM_R = 12  #pin 32 
+INPUT_1_RIGHT = 25 #pin 22
+INPUT_2_RIGHT = 8 #pin 24
 
 #right motor
-PWM_R = 13 #pin 33
-INPUT_1_RIGHT = 11 #pin 23 
-INPUT_2_RIGHT = 9 #pin 21
+PWM_L = 13 #pin 33
+INPUT_1_LEFT = 11 #pin 23 
+INPUT_2_LEFT = 9 #pin 21
 
 motorL = Motor.motor(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L)
 motorR = Motor.motor(INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R)
@@ -56,8 +56,8 @@ def shutoffRobot():
     print 'turn off'
 
 try: 
-    motorL.setSpeed(500)
-    motorR.setSpeed(500)
+    motorL.setSpeed(800)
+    motorR.setSpeed(800)
     while True:
         print 'begin' 
 

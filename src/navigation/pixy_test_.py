@@ -13,7 +13,7 @@ gift_far=12.5
 gift_near=10.5
 tree_far=12.5
 gift_near=10.5
-front_ir=2
+front_ir=3
 
 myClaw = Claw.claw(0,7)
 irSensor = ADS1x15(ic=0x00)
@@ -39,7 +39,7 @@ def pixyApproach(item):
     if item=='tree':
         v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
         d = irDistLeft(v)
-        while (x[2]<=tree_right or x[2]>=tree_left) or (d<=far or d>=near):
+        while (x[2]<=tree_right or x[2]>=tree_left) or (d<=tree_far or d>=tree_near):
             while x[2]<=tree_right:
                 print 'Right'
                 x=pixy_object.get_blocks()
@@ -56,13 +56,14 @@ def pixyApproach(item):
             if d<=tree_near:
                 print 'Back'
             x=pixy_object.get_blocks()
+            sleep(0.5)
         print 'Reached dropoff location'
         myClaw.dropGift()
         return True
     elif item=='gift':
         v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
         d = irDistLeft(v)
-        while (x[2]<=gift_right or x[2]>=gift_left) or (d<=far or d>=near):
+        while (x[2]<=gift_right or x[2]>=gift_left) or (d<=gift_far or d>=gift_near):
             while x[2]<=gift_right:
                 print 'Right'
                 x=pixy_object.get_blocks()
@@ -79,6 +80,7 @@ def pixyApproach(item):
             if d<=gift_near:
                 print 'Back'
             x=pixy_object.get_blocks()
+            sleep(0.5)
         print 'Reached pickup location'
         myClaw.pickupGift()
 	return True

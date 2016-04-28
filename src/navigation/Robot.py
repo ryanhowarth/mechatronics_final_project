@@ -4,22 +4,27 @@ import Encoders
 import pid_control
 from Adafruit_ADS1x15 import ADS1x15
 from time import sleep
+import time 
 
-COUNTS_FORWARD = 600
-COUNTS_TURN_MAX = 220
-COUNTS_TURN_MIN = 196
+COUNTS_FORWARD = 200
+COUNTS_TURN_MAX_L = 140
+COUNTS_TURN_MIN_L = 140
+COUNTS_TURN_MAX_R = 140
+COUNTS_TURN_MIN_R = 140
 
-PWM_DEFAULT = 500
-PWM_MAX = 700
-PWM_MIN = 300
+PWM_TURN_R= 900
+PWM_TURN_L = 800
+PWM_DEFAULT = 800
+PWM_MAX = 900
+PWM_MIN = 700
 
 IR_GAIN = 4096
 IR_SPS = 500
-IR_LEFT = 0
-IR_MIDDLE = 1
-IR_RIGHT = 2
+IR_LEFT = 1
+IR_MIDDLE = 2
+IR_RIGHT = 3
 
-P_GAIN = 0.75
+P_GAIN = 6
 I_GAIN = 0.02
 D_GAIN = 0.1
 
@@ -52,13 +57,13 @@ class robot():
 		del self.rightPid
 
 
-	def moveForward(self):
+	def moveForward(self, previous_decision):
 		print '######## MOVING FORWARD ########'
 
 		self.leftMotor.forward()
 		self.rightMotor.forward()
 
-		self.move_robot(COUNTS_FORWARD, COUNTS_FORWARD)
+		self.move_robot(previous_decision)
 
 	def turnLeft(self):
 		print '######## TURNING LEFT ########'
@@ -66,7 +71,7 @@ class robot():
 		self.leftMotor.backward()
 		self.rightMotor.forward()
 
-		self.move_robot(COUNTS_TURN_MAX, COUNTS_TURN_MIN)
+		self.turn_robot(COUNTS_TURN_MAX_L, COUNTS_TURN_MIN_L, PWM_TURN_L)
 
 	def turnRight(self):
 		print '######## TURNING RIGHT ########'
@@ -74,7 +79,7 @@ class robot():
 		self.leftMotor.forward()
 		self.rightMotor.backward()
 
-		self.move_robot(COUNTS_TURN_MIN, COUNTS_TURN_MAX)
+		self.turn_robot(COUNTS_TURN_MAX_R, COUNTS_TURN_MIN_R, PWM_TURN_R)
 
 	def turnAround(self):
 		print '######## TURNING AROUND ########'
@@ -82,62 +87,64 @@ class robot():
 		self.turnLeft()
 		self.turnLeft()
 
-	def move_robot(self,left_goal, right_goal):
+	def move_robot(self, previous_decision):
 
-		init_Rcount = self.encoders.get_right_wheel_count()
-		init_Lcount = self.encoders.get_left_wheel_count()
+		#init_Rcount = self.encoders.get_right_wheel_count()
+		#init_Lcount = self.encoders.get_left_wheel_count()
 
 		#print "init_Rcount: ", init_Rcount
 		#print "init_Lcount: ", init_Lcount
 
-		left_error = left_goal
-		right_error = right_goal
+		#left_error = left_goal
+		#right_error = right_goal
+		ir_data = self.getIrSensorData()
+		print (ir_data)
+		left_ir = ir_data[0]
+		right_ir = ir_data[2]
+		middle_ir = ir_data[1]
+		print "****DECISION*****", previous_decision
+		if previous_decision != -1:
+		
+			while ir_data[previous_decision] > 15:
+				ir_data = self.getIrSensorData()
+				print (ir_data)
+                		self.leftMotor.setSpeed(PWM_DEFAULT)
+                		self.rightMotor.setSpeed(PWM_DEFAULT)
+			self.stop()
+		
 
 		loop_check = 0
 		self.rightPid.reset()
 		self.leftPid.reset()
 
-		while (left_error > 10) and (right_error > 10):
+		while (left_ir < 15 ) and (right_ir < 15):
 			#R_pwm_speed = self.rightPid.get_pwm(right_error)
 			#L_pwm_speed = self.leftPid.get_pwm(left_error)
 			
-			ir_data = self.getIrSensorData()			
-			print "############### IR DATA ############"
-			print (ir_data)
-			left_ir = ir_data[0]
-			right_ir = ir_data[2]
+			ir_data = self.getIrSensorData()
+                	print (ir_data)
+                	left_ir = ir_data[0]
+
+                	right_ir = ir_data[2]
+                	middle_ir = ir_data[1]
 			
+			if middle_ir < 6:
+				break
 			R_pwm_speed = PWM_DEFAULT
 
 			L_pwm_speed = PWM_DEFAULT
 
 			if (left_ir < right_ir):
-				if (left_ir > 9.5) and (left_ir < 10):
-					if left_ir >8:	
-						left_ir == 8 
-					R_pwm_speed += left_ir*.65
-					print "TURNING TOWARDS LEFT WALL"
-				elif(left_ir > 5.5) and (left_ir < 8):
-					L_pwm_speed += left_ir*1.25
-					print "TURNING AWAY LEFT WALL"
-				elif (left_ir < 5.5):
-					L_pwm_speed += 8
-				else:
-					print "nothing being done"
-			elif (right_ir < left_ir):
-				if (right_ir > 9.5) and (right_ir < 10):
-					if right_ir >8:
-						right_ir = 8
-					L_pwm_speed += right_ir*.65
-					print "TURNING TOWARDS RIGHT WALL"
-				elif (right_ir > 5.5) and (right_ir < 8):
-					R_pwm_speed += right_ir*1.25
-					print "TURNING AWAY RIGHT WALL"
-				elif (right_ir <5.5):
-					R_pwm_speed += 8
-				else:
-					print "nothing being done"
-
+                		L_pwm_speed += (15 - left_ir) * 5
+				R_pwm_speed -= (15 - left_ir) * 5
+				#print "Print left speed: ", L_pwm_speed
+                		#print "TURN TOWARDS RIGHT"
+			
+            		elif (right_ir < left_ir):
+                		R_pwm_speed += (15 - right_ir) * 5
+				L_pwm_speed -= (15 - right_ir) * 5
+				#print "TURN TOWARDS LEFT"
+             
 			if R_pwm_speed > PWM_MAX:
 				R_pwm_speed = PWM_MAX
 			elif R_pwm_speed < PWM_MIN:
@@ -147,27 +154,89 @@ class robot():
 			elif L_pwm_speed < PWM_MIN:
 				L_pwm_speed = PWM_MIN
 
-			print "Right PWM: ", int(R_pwm_speed)
-			print "Left PWM: ",int( L_pwm_speed)
+			#print "Right PWM: ", int(R_pwm_speed)
+			#print "Left PWM: ",int( L_pwm_speed)
 
 			self.leftMotor.setSpeed(int(L_pwm_speed))
 			self.rightMotor.setSpeed(int(R_pwm_speed))
 
 	       		sleep(0.005)
-		
-			right_count = self.encoders.get_right_wheel_count()
-	        	print "right_count: ", right_count
-	        	left_count = self.encoders.get_left_wheel_count()
-	        	print "left_count: ", left_count
 
-	       		right_error = right_goal - abs(right_count - init_Rcount)
-	       		print "right_error: ", right_error
-	       		left_error = left_goal - abs(left_count - init_Lcount)
-	       		print "left error: ", left_error
+	       	self.stop()
+		#sleep(.005)
 
-	       		#self.stop()
-			#sleep(.005)
+	def turn_robot(self, left_goal, right_goal, PWM_TURN):
+		init_Rcount = self.encoders.get_right_wheel_count()
+                init_Lcount = self.encoders.get_left_wheel_count()
 
+                #print "init_Rcount: ", init_Rcount
+                #print "init_Lcount: ", init_Lcount
+
+                left_error = left_goal
+                right_error = right_goal
+
+                loop_check = 0
+                self.rightPid.reset()
+                self.leftPid.reset()
+
+                while (left_error > 10) and (right_error > 10):
+                        #R_pwm_speed = self.rightPid.get_pwm(right_error)
+                        #L_pwm_speed = self.leftPid.get_pwm(left_error)
+
+                        ir_data = self.getIrSensorData()
+                        #print "############### IR DATA ############"
+                        #print (ir_data)
+                        left_ir = ir_data[0]
+                        right_ir = ir_data[2]
+
+                        R_pwm_speed = PWM_TURN
+
+                        L_pwm_speed = PWM_TURN
+			#print 'right PWM: ', R_pwm_speed
+			#print 'left PWM: ', L_pwm_speed
+                        self.leftMotor.setSpeed(int(L_pwm_speed))
+                        self.rightMotor.setSpeed(int(R_pwm_speed))
+
+                        sleep(0.005)
+
+                        right_count = self.encoders.get_right_wheel_count()
+                        #print "right_count: ", right_count
+                        left_count = self.encoders.get_left_wheel_count()
+                        #print "left_count: ", left_count
+
+                        right_error = right_goal - abs(right_count - init_Rcount)
+                        #print "right_error: ", right_error
+                        left_error = left_goal - abs(left_count - init_Lcount)
+                        #print "left error: ", left_error
+
+                self.stop()
+	
+	def step_forward(self):
+		ir_data = self.getIrSensorData()
+                print "############### IR DATA ############"
+                print ir_data[1]
+
+               	if ir_data[1] < 5:
+			print "CHECK IF TOO CLOSE TO WALL"
+			self.leftMotor.backward()
+			self.rightMotor.backward()
+			sleep(.5)
+			self.stop()
+
+		self.leftMotor.forward()
+                self.rightMotor.forward()
+		self.leftMotor.setSpeed(PWM_DEFAULT)
+		self.rightMotor.setSpeed(PWM_DEFAULT)
+		print "****** STEPPING FORWARD *********"
+		tic = time.time()
+		toc = tic
+		while toc - tic < 2.5:
+			ir_data = self.getIrSensorData()
+                	if ir_data[1] < 6:
+				break
+			toc = time.time()
+           	self.stop()		
+	
 	def stop(self):
 
 		self.leftMotor.stop()
