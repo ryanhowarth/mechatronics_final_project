@@ -83,6 +83,8 @@ tree_lst=[1,0,1,'f']
 # Initialize path_lst: assume facing forward at start
 path_lst=[False,True,False] 
 
+mapping.node_proc(map_dic, tree_lst, path_lst)
+
 # Initialize that tree and gift have not been found
 giftFound = False
 treeFound = False
@@ -99,7 +101,7 @@ prev_decision = -1
 while True:
 	sleep(3)
 	robot.moveForward(prev_decision)
-	robot.step_forward()
+	robot.step_forward(prev_decision)
 
 	path_lst = update_intersection(robot)
 
@@ -113,7 +115,7 @@ while True:
 
 		# Mark opposite turn if tree is found
 		if treeFound:
-			if tree_lst[2]:
+			if tree_lst[3]=='f':
 				turnList[turnIndex] = 'R'
 				turnIndex += 1
 			else:
@@ -129,7 +131,7 @@ while True:
 
 		# Mark middle if tree is found
 		if treeFound:
-			if tree_lst[2] == 'f':
+			if tree_lst[3] == 'f':
 				turnList[turnIndex] = 'M'
 				turnIndex += 1
 			else:
@@ -143,7 +145,7 @@ while True:
 
 		# Mark opposite turn if tree is found
 		if treeFound:
-			if tree_lst[2]:
+			if tree_lst[3]=='b':
 				turnList[turnIndex] = 'L'
 				turnIndex += 1
 			else:
@@ -161,5 +163,5 @@ while True:
 		tree_lst[0] = temp
 
 		# Change direction
-		tree_lst[2] = 'b'
+		tree_lst[3] = 'b'
 	#robot.step_forward()

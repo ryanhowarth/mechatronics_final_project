@@ -22,12 +22,13 @@ def irDistLeft(volts):
     return 11.721 * volts**(-0.972)
 
 def pixyDetectItem():
-    x = pixy_object.get_blocks_and_print()
-    if x[0]==1:
+    blocks = pixy_object.get_blocks()
+    signature = blocks[0]
+    if signature==1:
         return 'tree'
-    elif x[0]==2:
+    elif signature==2:
         return 'gift'
-    elif x[0]==0:
+    elif signature==0:
         return 'none'
     else:
         return 'other'
@@ -45,16 +46,27 @@ def pixyApproach(item):
                 x=pixy_object.get_blocks()
             while x[2]>=tree_left:
                 print 'Left'
+                sleep(0.5)
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
             d = irDistLeft(v)
             print d
-            if d<tree_far and d>tree_near:
-                break
-            if d>=tree_far:
+#            if d<tree_far and d>tree_near:
+#                break
+            while d >= tree_far:
                 print 'Forward'
-            if d<=tree_near:
+                sleep(0.25)
+                v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
+                d = irDistLeft(v)
+#                print d
+
+            while d<=tree_near:
                 print 'Back'
+                sleep(0.25)
+                v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
+                d = irDistLeft(v)
+#                print d
+
             x=pixy_object.get_blocks()
             sleep(0.5)
         print 'Reached dropoff location'
