@@ -96,10 +96,10 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 # Print current structure
 mapping.print_node(map_dic)
 
-prev_decision = -1
+prev_decision = 0
 
 while True:
-	sleep(3)
+	sleep(1)
 	robot.moveForward(prev_decision)
 	
 	path_lst = update_intersection(robot)
@@ -130,7 +130,6 @@ while True:
 	# Check if straight is available
 	elif path_lst[1]:
 		# Keep robot straight
-
 		if path_lst[2]:
 			mapping.node_proc(map_dic, tree_lst, path_lst)
 
@@ -148,7 +147,7 @@ while True:
 		wall = 0
 		robot.step_forward(wall)
 
-	robot.turnRight()
+		robot.turnRight()
 		prev_decision = 2
 
 		# Mark opposite turn if tree is found

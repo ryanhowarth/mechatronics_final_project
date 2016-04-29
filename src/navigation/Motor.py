@@ -56,7 +56,6 @@ class motor():
 			speed = PWM_MAX
 		elif speed < PWM_MIN:
 			speed = PWM_MIN
-
 		wp.pwmWrite(self.pwm, speed)
 
 	def getPins(self):

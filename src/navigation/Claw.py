@@ -1,7 +1,7 @@
 import Adafruit_PCA9685
 from time import sleep
 
-LOWER_PICKUP = 380
+LOWER_PICKUP = 400
 LOWER_DROP = 360
 RAISE_SERVO = 170
 OPEN_SERVO = 400
