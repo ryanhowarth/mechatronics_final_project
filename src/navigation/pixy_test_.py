@@ -46,7 +46,6 @@ def pixyApproach(item):
                 x=pixy_object.get_blocks()
             while x[2]>=tree_left:
                 print 'Left'
-                sleep(0.5)
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
             d = irDistLeft(v)
@@ -68,7 +67,6 @@ def pixyApproach(item):
 #                print d
 
             x=pixy_object.get_blocks()
-            sleep(0.5)
         print 'Reached dropoff location'
         myClaw.dropGift()
         return True

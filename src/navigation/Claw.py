@@ -16,7 +16,7 @@ class claw():
 		self.liftServo = liftServoPin
 		self.pinchServo = pinchServoPin
 
-		self.resetClaw()
+		#self.resetClaw()
 
 	def __del__(self):
 		self.resetClaw()
