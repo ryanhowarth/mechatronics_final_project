@@ -18,8 +18,8 @@ ADJUST_MIN = 25
 
 GIFT_RIGHT=90
 GIFT_LEFT=110
-TREE_RIGHT=100
-TREE_LEFT=120
+TREE_RIGHT=90
+TREE_LEFT=110
 GIFT_FAR=8.4
 GIFT_NEAR=7.4
 TREE_FAR=9
@@ -28,8 +28,8 @@ TREE_NEAR=7
 PWM_TURN_R= 800
 PWM_TURN_L = 800
 PWM_DEFAULT = 810
-PWM_MAX = 850
-PWM_MIN = 770
+PWM_MAX = 810
+PWM_MIN = 790
 PWM_ADJUST = 850
 
 IR_GAIN = 4096
@@ -156,35 +156,53 @@ class robot():
 		# Waiting to exit previous intersection
 		wallToFollow = decision
 		while ir_data[decision] > WALL_THRESH:
-			# Follow opposite wall if it exists
-			if ir_data[(decision + 2) % 4] < WALL_THRESH:
-				self.followWall( (decision + 2) % 4)
-			# Otherwise go straight
-			else:
-				self.goStraight()
-			ir_data = self.getIrSensorData()
-		self.stop()
-
+			wallToFollow = decision
+		
+		if decision != -1:
+			print '##### WAITING FOR WALL####'
+			sleep(1)
+			while ir_data[decision] > WALL_THRESH:
+				# Follow opposite wall if it exists
+				if ir_data[(decision + 2) % 4] < WALL_THRESH:
+					self.followWall( ((decision + 2) % 4), 12)
+					wallToFollow = (decision +2) %4
+				# Otherwise go straight
+				else:
+					self.goStraight()
+				ir_data = self.getIrSensorData()
+			self.stop()
+			print 'FOUND WALL!!!'
+			sleep(1)
 		# While walls exist on both sides, 
 		# follow the wall we came from
-		while (ir_data[0] < 20) and (ir_data[2] < 20):
-			self.followWall(wallToFollow)
-			ir_data = self.getIrSensorData()
-		
+
+		else:
+			print '### WALLS ON BOTH SIDES ###'
+			sleep(1) 
+			while (ir_data[0] < 20) and (ir_data[2] < 20):
+				print 'I AM IN WALLS ON BOTH SIDES'
+				wallToFollow = 0
+				self.followWall(wallToFollow, 12)
+				ir_data = self.getIrSensorData()
+			self.stop()
+			
 		tic = time.time()
 		toc = tic
 		while toc - tic < 1:
-			ir_data = self.followWall(wallToFollow)
+			print 'slight movement forward', wallToFollow
+			ir_data = self.followWall(wallToFollow, 14)
 			#if (ir_data[1] < 8):
 			#	break	
 			toc = time.time()
-		
-		self.stop()		
-		
+	
+		self.stop()
+		sleep(2)
+	
 	def step_forward(self, wallToFollow):		
 	
-		print 'in step_forward'
-
+		
+		print '####STEPPING FORWARD######'
+		sleep(1)
 		# Stop if too close to front wall
 		ir_data = self.getIrSensorData()
 
@@ -193,14 +211,14 @@ class robot():
 	
 		tic = time.time()
 		toc = tic
-		while toc - tic < 2.5:
-			ir_data = self.followWall(wallToFollow)
-			if (ir_data[1] < 8):
+		while toc - tic < 3:
+			ir_data = self.followWall(wallToFollow, 14)
+			if (ir_data[1] < 5):
 				break	
 			toc = time.time()
 		self.stop()		
 	
-	def followWall(self, wallToFollow):
+	def followWall(self, wallToFollow, thresh):
 
 		#print 'in followWall'
 
@@ -215,7 +233,7 @@ class robot():
 
 		# Proportional control of motors
 		if ir_data[wallToFollow] < WALL_THRESH:
-			magnitude = 10 - ir_data[wallToFollow]
+			magnitude = thresh - ir_data[wallToFollow]
 			if wallToFollow == 0:
 				print 'following left ', magnitude
 				L_pwm_speed += magnitude * GAIN_L
@@ -224,7 +242,8 @@ class robot():
 				print 'following right ', magnitude
 				R_pwm_speed += magnitude * GAIN_R
 				L_pwm_speed -= magnitude * GAIN_L
-            		
+            		#if ir_data[1] < 8: 
+			#	return 	
 		# Constrain PWM to constants
                	if R_pwm_speed > PWM_MAX:
                     	R_pwm_speed = PWM_MAX
@@ -235,21 +254,22 @@ class robot():
                	elif L_pwm_speed < PWM_MIN:
                      	L_pwm_speed = PWM_MIN
 
-		print 'L: ',L_pwm_speed
-		print 'R: ',R_pwm_speed
+		#print 'L: ',L_pwm_speed
+		#print 'R: ',R_pwm_speed
 
 		# Set motor speeds
              	self.leftMotor.setSpeed(int(L_pwm_speed))
             	self.rightMotor.setSpeed(int(R_pwm_speed))
               	
+		#sleep(.5)
 		return ir_data
 	
 	def turn_robot(self, left_goal, right_goal, PWM_TURN):
 		init_Rcount = self.encoders.get_right_wheel_count()
                 init_Lcount = self.encoders.get_left_wheel_count()
 
-                #print "init_Rcount: ", init_Rcount
-                #print "init_Lcount: ", init_Lcount
+                print "init_Rcount: ", init_Rcount
+                print "init_Lcount: ", init_Lcount
 
                 left_error = left_goal
                 right_error = right_goal
@@ -279,16 +299,16 @@ class robot():
                         sleep(0.005)
 
                         right_count = self.encoders.get_right_wheel_count()
-                        #print "right_count: ", right_count
+                        print "right_count: ", right_count
                         left_count = self.encoders.get_left_wheel_count()
-                        #print "left_count: ", left_count
+                        print "left_count: ", left_count
 
                         right_error = right_goal - abs(right_count - init_Rcount)
-                        #print "right_error: ", right_error
+                        print "right_error: ", right_error
                         left_error = left_goal - abs(left_count - init_Lcount)
-                        #print "left error: ", left_error
-
+                        print "left error: ", left_error
                 self.stop()
+
 	def stop(self):
 
 		self.leftMotor.stop()
@@ -381,24 +401,3 @@ class robot():
         	while (x[2]<=GIFT_RIGHT or x[2]>=GIFT_LEFT) or (ir_data[1] >= GIFT_FAR or ir_data[1] <= GIFT_NEAR):
 			while x[2]<=GIFT_RIGHT:
 				print 'Right'
-				self.adjustRight()
-				x=self.pixyObj.get_blocks()
-			while x[2]>=GIFT_LEFT:
-				print 'Left'
-				self.adjustLeft()
-				x=self.pixyObj.get_blocks()
-			if ir_data[1] >= GIFT_FAR:
-				print 'Forward'
-				self.adjustForward()
-				ir_data = self.getIrSensorData()
-			elif ir_data[1] <= GIFT_NEAR:
-				print 'Back'
-				self.adjustBackward()
-				ir_data = self.getIrSensorData()
-			x=self.pixyObj.get_blocks()
-		
-		sleep(0.5)
-		print 'Reached pickup location'
-		
-		self.pickupGift()
-		return True

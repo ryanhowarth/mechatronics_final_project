@@ -33,11 +33,12 @@ SERVO_PINCH = 7
 robot = Robot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
 
 def update_intersection(robot):
+	print '*******UPDATING INTERSECTION *******'
 	distances = robot.getIrSensorData()
 
 	path_lst=[False]*3
 	for i in xrange(3):
-	    path_lst[i] = distances[i] > 20
+	    path_lst[i] = distances[i] > 22
 	
 	return path_lst 
 
@@ -96,7 +97,7 @@ mapping.node_proc(map_dic, tree_lst, path_lst)
 # Print current structure
 mapping.print_node(map_dic)
 
-prev_decision = 0
+prev_decision = -1
 
 while True:
 	sleep(1)
@@ -129,6 +130,7 @@ while True:
 
 	# Check if straight is available
 	elif path_lst[1]:
+		prev_decision = -1
 		# Keep robot straight
 		if path_lst[2]:
 			mapping.node_proc(map_dic, tree_lst, path_lst)
