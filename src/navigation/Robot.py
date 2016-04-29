@@ -1,4 +1,3 @@
-
 import Motor
 import Claw
 import Encoders
@@ -9,10 +8,22 @@ import time
 from pixy import easy_pixy_test
 
 COUNTS_FORWARD = 200
-COUNTS_TURN_MAX_L = 140
-COUNTS_TURN_MIN_L = 140
-COUNTS_TURN_MAX_R = 160
-COUNTS_TURN_MIN_R = 160
+COUNTS_TURN_MAX_L = 150
+COUNTS_TURN_MIN_L = 150
+COUNTS_TURN_MAX_R = 170
+COUNTS_TURN_MIN_R = 170
+
+ADJUST_MAX = 50
+ADJUST_MIN = 50
+
+GIFT_RIGHT=60
+GIFT_LEFT=80
+TREE_RIGHT=70
+TREE_LEFT=90
+GIFT_FAR=8.5
+GIFT_NEAR=7.5
+TREE_FAR=9
+TREE_NEAR=7
 
 PWM_TURN_R= 800
 PWM_TURN_L = 800
@@ -33,7 +44,7 @@ D_GAIN = 0.1
 SIG_GIFT = 2
 SIG_TREE = 1
 
-GAIN = 7
+GAIN = 15
 
 class robot():
 
@@ -98,14 +109,16 @@ class robot():
 	def adjustForward(self):
 		self.leftMotor.forward()
 		self.rightMotor.forward()
-
-		self.move_robot(-1)
+                sleep(0.5)
+                self.leftMotor.stop()
+                self.rightMotor.stop()
 	
 	def adjustBackward(self):
 		self.leftMotor.backward()
 		self.rightMotor.backward()
-
-		self.move_robot(-1)
+                sleep(0.5)
+                self.leftMotor.stop()
+                self.rightMotor.stop()
 		
 	def turnRight(self):
 		print '######## TURNING RIGHT ########'
@@ -120,87 +133,90 @@ class robot():
 
 		self.turnLeft()
 		self.turnLeft()
-	#@profile
-	def move_robot(self, previous_decision):
+	
+	def goStraight(self):
+		self.motorL.forward()
+		self.motorR.forward()
+		
+		self.motorL.setSpeed(PWM_DEFAULT)
+		self.motorR.setSpeed(PWM_DEFAULT)
 
-		#init_Rcount = self.encoders.get_right_wheel_count()
-		#init_Lcount = self.encoders.get_left_wheel_count()
+	def move_robot(self, decision):
 
-		#print "init_Rcount: ", init_Rcount
-		#print "init_Lcount: ", init_Lcount
-
-		#left_error = left_goal
-		#right_error = right_goal
 		ir_data = self.getIrSensorData()
-		#print (ir_data)
-		left_ir = ir_data[0]
-		right_ir = ir_data[2]
-		middle_ir = ir_data[1]
-		#print "****DECISION*****", previous_decision
-		if previous_decision != -1:
-		
-			while ir_data[previous_decision] > 25:
-				#ir_data = self.getIrSensorData()
-				#print (ir_data), "trying to pass"
-				ir_data = self.followClosestWall()
-                		#self.leftMotor.setSpeed(PWM_MIN)
-                		#self.rightMotor.setSpeed(PWM_MIN)
-			self.stop()
-		
-
-		loop_check = 0
-		self.rightPid.reset()
-		self.leftPid.reset()
-
-		while (left_ir < 15 ) and (right_ir < 15):
-			#R_pwm_speed = self.rightPid.get_pwm(right_error)
-			#L_pwm_speed = self.leftPid.get_pwm(left_error)
-			
+		# Waiting to exit previous intersection
+		wallToFollow = decision
+		while ir_data[decision] > 25:
+			# Follow opposite wall if it exists
+			if ir_data[(decision + 2) % 4] < 20:
+				self.followWall( (decision + 2) % 4)
+			# Otherwise go straight
+			else:
+				self.goStraight()
 			ir_data = self.getIrSensorData()
-                	#print (ir_data)
-                	#print "moving forwards"
-			left_ir = ir_data[0]
-
-                	right_ir = ir_data[2]
-                	middle_ir = ir_data[1]
-			
-			if middle_ir < 8:
-				print "TOO CLOSE!!"
-				break
-			R_pwm_speed = PWM_DEFAULT
-
-			L_pwm_speed = PWM_DEFAULT
-
-			if (left_ir < right_ir):
-                		L_pwm_speed += (15 - left_ir) * GAIN
-				R_pwm_speed -= (15 - left_ir) * GAIN
-				#print "Print left speed: ", L_pwm_speed
-                		#print "TURN TOWARDS RIGHT"
-			
-            		elif (right_ir < left_ir):
-                		R_pwm_speed += (15 - right_ir) * GAIN
-				L_pwm_speed -= (15 - right_ir) * GAIN				#print "TURN TOWARDS LEFT"
-             		
-			if R_pwm_speed > PWM_MAX:
-				R_pwm_speed = PWM_MAX
-			elif R_pwm_speed < PWM_MIN:
-				R_pwm_speed = PWM_MIN
-			if L_pwm_speed > PWM_MAX:
-				L_pwm_speed = PWM_MAX
-			elif L_pwm_speed < PWM_MIN:
-				L_pwm_speed = PWM_MIN
-
-			#print "Right PWM: ", int(R_pwm_speed)
-			#print "Left PWM: ",int( L_pwm_speed)
-
-			self.leftMotor.setSpeed(int(L_pwm_speed))
-			self.rightMotor.setSpeed(int(R_pwm_speed))
-
-	       		#sleep(0.005)
-
 		self.stop()
-		#sleep(.005)
 
+		# While walls exist on both sides, 
+		# follow the wall we came from
+		while (ir_data[0] < 25) and (ir_data[2] < 25):
+			self.followWall(wallToFollow)
+			ir_data = self.getIrSensorData()
+		self.stop()
+
+	def step_forward(self, wallToFollow)		
+	
+		# Stop if too close to front wall
+		ir_data = self.getIrSensorData()
+
+		self.leftMotor.forward()
+                self.rightMotor.forward()
+	
+		tic = time.time()
+		toc = tic
+		while toc - tic < 2.5:
+			ir_data = self.followWall(wallToFollow)
+			if (ir_data[1] < 8):
+				break	
+			toc = time.time()
+		self.stop()		
+	
+	def followWall(self, wallToFollow):
+		ir_data = self.getIrSensorData()
+                print (ir_data)
+
+		# Case that should rarely (never) happen
+               	if middle_ir < 8:
+                       	return ir_data
+
+              	R_pwm_speed = PWM_DEFAULT
+               	L_pwm_speed = PWM_DEFAULT
+
+		# Proportional control of motors
+		if ir_data[wallToFollow] < 20:
+			magnitude = 16 - ir_data[wallToFollow]
+			if wallToFollow == 0:
+				L_pwm_speed += magnitude * GAIN
+                        	R_pwm_speed -= magnitude * GAIN
+			elif wallToFollow == 2:
+				R_pwm_speed += magnitude * GAIN
+				L_pwm_speed -= magnitude * GAIN
+            		
+		# Constrain PWM to constants
+               	if R_pwm_speed > PWM_MAX:
+                    	R_pwm_speed = PWM_MAX
+       		elif R_pwm_speed < PWM_MIN:
+                      	R_pwm_speed = PWM_MIN
+            	if L_pwm_speed > PWM_MAX:
+                       	L_pwm_speed = PWM_MAX
+               	elif L_pwm_speed < PWM_MIN:
+                     	L_pwm_speed = PWM_MIN
+
+		# Set motor speeds
+             	self.leftMotor.setSpeed(L_pwm_speed)
+            	self.rightMotor.setSpeed(R_pwm_speed)
+              	
+		return ir_data
+	
 	def turn_robot(self, left_goal, right_goal, PWM_TURN):
 		init_Rcount = self.encoders.get_right_wheel_count()
                 init_Lcount = self.encoders.get_left_wheel_count()
@@ -246,88 +262,6 @@ class robot():
                         #print "left error: ", left_error
 
                 self.stop()
-	
-	def step_forward(self, previous_decision):
-		ir_data = self.getIrSensorData()
-                #print "############### IR DATA ############"
-                #print ir_data[1]
-
-               	if ir_data[1] < 8:
-		#	print "CHECK IF TOO CLOSE TO WALL"
-			self.leftMotor.backward()
-			self.rightMotor.backward()
-			sleep(.5)
-			self.stop()
-
-		self.leftMotor.forward()
-                self.rightMotor.forward()
-		
-		#print "****** STEPPING FORWARD *********"
-		tic = time.time()
-		toc = tic
-		while toc - tic < 2.25:
-			ir_data = self.followClosestWall()
-			if (ir_data[1] < 8):
-				break	
-			toc = time.time()
-		self.stop()		
-	
-	def followClosestWall(self):
-		ir_data = self.getIrSensorData()
-                print (ir_data)
-
-              	left_ir = ir_data[0]
-    	    	right_ir = ir_data[2]
-             	middle_ir = ir_data[1]
-
-                if middle_ir < 8:
-                 #   	print "TOO CLOSE-- following wall"
-                       	return ir_data
-
-              	R_pwm_speed = PWM_DEFAULT
-
-               	L_pwm_speed = PWM_DEFAULT
-              	#print "previous pwm speeds",L_pwm_speed, R_pwm_speed
-		#left wall closest
-              	if (left_ir < 20):
-                  	if (left_ir < 15):
-                           	L_pwm_speed += (15 - left_ir) * GAIN
-                               	R_pwm_speed -= (15 - left_ir) * GAIN
-                              	#print "Print left speed: ", L_pwm_speed
-                               	print "TURN TOWARDS RIGHT- left wall closest"
-                    	else:
-                              	R_pwm_speed += (15 - left_ir) * GAIN
-                               	L_pwm_speed -= (15 - left_ir) * GAIN
-                             	print "TURN TOWARDS LEFT - left wall closest"
-            	elif (right_ir < 20):
-                      	if (right_ir < 15):
-                       		R_pwm_speed += (15 - right_ir) * GAIN
-                              	L_pwm_speed -= (15 - right_ir) * GAIN
-                               	print "TURN TOWARDS LEFT - right wall closest"
-                    	else:
-                           	L_pwm_speed += (15 - right_ir) * GAIN
-                             	R_pwm_speed -= (15 - right_ir) * GAIN
-                               	#print " left speed: ", L_pwm_speed
-                             	#print " right speed: ", R_pwm_speed
-                               	print "TURN TOWARDS RIGHT - right wall closest"
-              	else:
-                    	print "GOING STRAIGHT - no wall closest"
-
-		#print "**ADJUSTMENT MADE**"
-               	if R_pwm_speed > PWM_MAX:
-                    	R_pwm_speed = PWM_MAX
-       		elif R_pwm_speed < PWM_MIN:
-                      	R_pwm_speed = PWM_MIN
-            	if L_pwm_speed > PWM_MAX:
-                       	L_pwm_speed = PWM_MAX
-               	elif L_pwm_speed < PWM_MIN:
-                     	L_pwm_speed = PWM_MIN
-
-             	self.leftMotor.setSpeed(int(L_pwm_speed))
-            	self.rightMotor.setSpeed(int(R_pwm_speed))
-              	#print "left PWM: ", int(L_pwm_speed)
-            	#print "right PWM: ", int(R_pwm_speed)
-		return ir_data
 	def stop(self):
 
 		self.leftMotor.stop()
@@ -339,7 +273,7 @@ class robot():
 		distanceM = []
 		distanceR = []
 
-		for i in xrange(10):
+		for i in xrange(5):
 			voltsL = self.irSensors.readADCSingleEnded(IR_LEFT, IR_GAIN, IR_SPS)/1000
 			distanceL.append(self.irDist(voltsL))
 
@@ -379,38 +313,38 @@ class robot():
 
 	# Returns true if pickup or dropoff succesful
 	def approachTree():
-		x=pixy_object.get_blocks()
+		x=self.pixyObj.get_blocks()
     
 		volts = irSensor.readADCSingleEnded(front_ir, 4096, 250)/1000
-		dist = irDistLeft(volts)
-		while (x[2] <= tree_right or x[2] >= tree_left) or (dist <= tree_far or dist >= tree_near):
-			while x[2]<=tree_right:
+		dist = irDist(volts)
+		while (x[2] <= TREE_RIGHT or x[2] >= TREE_LEFT) or (dist >= TREE_FAR or dist <= TREE_NEAR):
+			while x[2]<=TREE_RIGHT:
 				print 'Right'
 				self.adjustRight()
-				x=pixy_object.get_blocks()
-			while x[2]>=tree_left:
+				x=self.pixyObj.get_blocks()
+			while x[2]>=TREE_LEFT:
 				print 'Left'
 				self.adjustLeft()
-				x=pixy_object.get_blocks()
+				x=self.pixyObj.get_blocks()
 			sleep(0.05)
 			volts = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-			dist = irDistLeft(volts)
+			dist = irDist(volts)
 			print dist
 #			if d<tree_far and d>tree_near:
 #				break
-			while dist >= tree_far:
+			while dist >= TREE_FAR:
 				print 'Forward'
 				self.adjustForward()
 				volts = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-				dist = irDistLeft(volts)
+				dist = irDist(volts)
 
-			while dist <=tree_near:
+			while dist <= TREE_NEAR:
 				print 'Back'
 				self.adjustBackward()
 				volts = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-				dist = irDistLeft(volts)
+				dist = irDist(volts)
 			
-			x=pixy_object.get_blocks()
+			x=self.pixyObj.get_blocks()
 			
 			sleep(0.5)
 			print 'Reached dropoff location'
@@ -421,29 +355,26 @@ class robot():
 		x = self.pixyObj.get_blocks()
 
 		volts = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-        	dist = irDistLeft(volts)
-        	while (x[2]<=gift_right or x[2]>=gift_left) or (dist <= gift_far or dist >= gift_near):
-			while x[2]<=gift_right:
+        	dist = irDist(volts)
+        	while (x[2]<=GIFT_RIGHT or x[2]>=GIFT_LEFT) or (dist >= GIFT_FAR or dist <= GIFT_NEAR):
+			while x[2]<=GIFT_RIGHT:
 				print 'Right'
 				self.adjustRight()
-				x=pixy_object.get_blocks()
-			while x[2]>=gift_left:
+				x=self.pixyObj.get_blocks()
+			while x[2]>=GIFT_LEFT:
 				print 'Left'
 				self.adjustLeft()
-				x=pixy_object.get_blocks()
+				x=self.pixyObj.get_blocks()
 			
 			volts = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-			dist = irDistLeft(volts)
-			
-#			if d<gift_far and d>gift_near:
-#                		break
-			if d >= gift_far:
+			dist = irDist(volts);
+			if d >= GIFT_FAR:
 				print 'Forward'
 				self.adjustForward()
-			elif d <= gift_near:
+			elif d <= GIFT_NEAR:
 				print 'Back'
 				self.adjustBackward()
-			x=pixy_object.get_blocks()
+			x=self.pixyObj.get_blocks()
 		
 		sleep(0.5)
 		print 'Reached pickup location'
@@ -452,3 +383,6 @@ class robot():
 		return True
 
 
+import Motor
+import Claw
+import Encoders

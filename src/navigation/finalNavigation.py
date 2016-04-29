@@ -101,12 +101,17 @@ prev_decision = -1
 while True:
 	sleep(3)
 	robot.moveForward(prev_decision)
-	robot.step_forward(prev_decision)
-
+	
 	path_lst = update_intersection(robot)
 
 	# Check if left turn is available
 	if path_lst[0]:
+		if path_lst[2]:
+			wall = 1
+		else:
+			wall = 2
+		robot.step_forward(wall)
+
 		robot.turnLeft()
 		prev_decision = 0
 		# If at an intersection, add node to structure
@@ -140,7 +145,10 @@ while True:
 
 	# Check if right is available
 	elif path_lst[2]:
-		robot.turnRight()
+		wall = 0
+		robot.step_forward(wall)
+
+	robot.turnRight()
 		prev_decision = 2
 
 		# Mark opposite turn if tree is found

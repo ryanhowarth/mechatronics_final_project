@@ -3,16 +3,16 @@ from pixy import easy_pixy_test
 from time import sleep
 from Adafruit_ADS1x15 import ADS1x15
 import Claw
-import Motor
+
 pixy_object = easy_pixy_test.easy_pixy()
-gift_right=60 #y < _ when gift to right (camera is sideways)
-gift_left=80 #y > _ when gift to left
-tree_right=70 #y < _ when tree to right (camera is sideways)
-tree_left=90 #y > _ when tree to left
-gift_far=8.5
-gift_near=7.5
-tree_far=9
-tree_near=7
+gift_right=100 #y < _ when gift to right (camera is sideways)
+gift_left=120 #y > _ when gift to left
+tree_right=100 #y < _ when tree to right (camera is sideways)
+tree_left=120 #y > _ when tree to left
+gift_far=12
+gift_near=10
+tree_far=13
+tree_near=12
 front_ir=2
 
 myClaw = Claw.claw(0,7)
@@ -39,7 +39,7 @@ def pixyApproach(item):
     if item=='tree':
         v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
         d = irDistLeft(v)
-        while (x[2]<=tree_right or x[2]>=tree_left) or (d>=tree_far or d<=tree_near):
+        while (x[2]<=tree_right or x[2]>=tree_left) or (d<=tree_far or d>=tree_near):
             while x[2]<=tree_right:
                 print 'Right'
                 x=pixy_object.get_blocks()
@@ -64,6 +64,7 @@ def pixyApproach(item):
                 v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
                 d = irDistLeft(v)
                 print d
+
             x=pixy_object.get_blocks()
         print 'Reached dropoff location'
         myClaw.dropGift()
