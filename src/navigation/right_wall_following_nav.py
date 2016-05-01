@@ -6,13 +6,24 @@ import NewRobot
 
 import signal
 import sys
+import IRSensor
 
-def signal_handler(signal, frame):
+
+
+ 
+Rdef signal_handler(signal, frame):
     print 'Exiting'
     del robot
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
+
+
+#irsensor object
+irSensors = IrSensor.irSensors()
+IR_LEFT = 0
+IR_MIDDLE = 1
+IR_RIGHT = 2
 
 #Pixy 
 #pixy_object = easy_pixy.easy_pixy()
@@ -32,4 +43,30 @@ SERVO_PINCH = 7
 
 robot = NewRobot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
 
-robot.moveForwardUntilNoWall()
+def process_ir_data():
+	irData = self.getIrSensorData()
+	if irData[IR_RIGHT] > 20:
+		robot.turnRight()
+		sleep(1)
+		robot.moveForwardToFindRightWall()
+		sleep(1)
+case = -1
+try:
+	while case != -1:
+		if case == 1:
+			if = (robot.moveForwardUntilNoWall()):
+				sleep(1)
+				robot.moveForwardToClearTurnRadius()
+				sleep(1)
+				case = 10
+		if case == 2:
+			robot.moveForwardToClearTurnRadius()
+		if case == 10:
+		
+			
+
+
+
+
+
+		

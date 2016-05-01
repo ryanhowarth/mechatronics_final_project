@@ -36,6 +36,13 @@ PWM_MAX = 900
 PWM_MIN = 800
 PWM_ADJUST = 850
 
+
+#Counts for stuff
+TURN_RADIUS_CORR_COUNT = 125
+COUNT_TURN_LEFT = 150
+COUNT_TURN_RIGHT = 150
+
+
 #Default pwm values to go straight
 PWM_NOMINAL_LEFT = 832
 PWM_NOMINAL_RIGHT = 800
@@ -58,7 +65,7 @@ R_GAIN = 2
 #Wall Thresholds
 MAX_WALL_THRESH = 17
 #MIN_WALL_THRESH = 10
-MIN_FRONT_WALL_THRESH = 6
+MIN_FRONT_WALL_THRESH = 5
 IDEAL_DIST_FROM_WALL = 11
 
 #Control Parameters
@@ -108,21 +115,74 @@ class robot():
 			start_time = time.time() #Must always be first line in fuction.
 			irData = self.getIrSensorData()
 			
-			if self.checkFrontWall(irData):
-				#Write code to stop the robot
-				pass
+			if not self.checkFrontWall(irData):
+				return -1
 			
 			
 			self.sleepToEndLoop(start_time)
 			self.moveForward()
 			self.correctToRightWall(irData)
 		self.stop()
+		return 2
+	#moves forward trying to find right wall.
+	#does not do positional correction. 
+	#TODO:
+	#could use left wall to do corrections at some point in futur
+	def moveForwardToFindRightWall(self):
+		irData = self.getIrSensorData()
 
-		
+		while irData[IR_RIGHT] > MAX_WALL_THRESH:
+			start_time = time.time() #Must always be first line in fuction.
+			
+			irData = self.getIrSensorData()
+			
+			if not self.checkFrontWall(irData):
+				return -1
+			
+			
+			self.sleepToEndLoop(start_time)
+			self.moveForward()
+		self.stop()
+		return 2
+
+	def moveForwardToClearTurnRadius(self):
+		irData = self.getIrSensorData()
+		init_Rcount = self.encoders.get_right_wheel_count()
+                init_Lcount = self.encoders.get_left_wheel_count()
+	 	Rcount = 0
+		Lcount = 0
+		while Rcount < TURN_RADIUS_CORR_COUNT and Lcount < TURN_RADIUS_CORR_COUNT:
+			start_time = time.time()
+			self.moveForward()
+			Rcount = self.encoders.get_right_wheel_count() - init_Rcount
+			Lcount = self.encoders.get_left_wheel_count() - init_Lcount
+			self.sleepToEndLoop(start_time)
+		self.stop()
+			
+
+	def turn_robot2(self):
+		init_Rcount = self.encoders.get_right_wheel_count()
+                init_Lcount = self.encoders.get_left_wheel_count()
+		Lcount = 0
+		Rcount = 0
+
+                while Lcount < COUNT_TURN_LEFT and Rcount < COUNT_TURN_RIGHT:
+                        
+			self.leftMotor.setSpeed(PWM_NOMINAL_LEFT)
+                        self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT)
+
+                        sleep(0.005)
+
+                        Lcount = abs(self.encoders.get_right_wheel_count() - init_Rcount)
+                        Rcount = abs(self.encoders.get_left_wheel_count() - init_Lcount)
+
+		self.stop()		
 	#checks to see how far robot is from right wall.
 	#if it is within +/- 2 it does nothing, otherwise calls correction functions
 	def correctToRightWall(self, irData):
-		
+		if (irData[IR_RIGHT] > MAX_WALL_THRESH):
+			print "RIGHT WALL TOO FAR AWAY. Consider using LEFT"
+			
 		if irData[IR_RIGHT] > IDEAL_DIST_FROM_WALL - 2 and irData[IR_RIGHT] <IDEAL_DIST_FROM_WALL + 2:
 			return 
 		elif irData[IR_RIGHT] < IDEAL_DIST_FROM_WALL:
@@ -146,7 +206,12 @@ class robot():
 
 
 	def checkFrontWall(self, irData):
-		return irData[IR_MIDDLE] < MIN_FRONT_WALL_THRESH
+		if irData[IR_MIDDLE] < MIN_FRONT_WALL_THRESH:
+			self.stop()
+			print "STOPPED BECAUSE WALL TOO CLOSE"
+			return False
+		else:
+			return True
 		
 	#This function sleeps at the end of loop in order to keep a desired control freqency
 	#This is specified in the global variable 'loop_freq'
@@ -175,18 +240,25 @@ class robot():
 		self.leftMotor.stop()
 		self.rightMotor.stop()
 	
-
-
-
-
-
 	def turnLeft(self):
 		print '######## TURNING LEFT ########'
 
 		self.leftMotor.backward()
 		self.rightMotor.forward()
 
-		self.turn_robot(COUNTS_TURN_MAX_L, COUNTS_TURN_MIN_L, PWM_TURN_L)
+		self.turn_robot2()
+	def turnRight(self):
+		print '######## TURNING RIGHT ########'
+
+		self.leftMotor.forward()
+		self.rightMotor.backward()
+
+		self.turn_robot2()
+
+
+
+
+
 	
 	def adjustLeft(self):
 		print '####### ADJUST LEFT #######'
@@ -220,13 +292,6 @@ class robot():
                 sleep(0.25)
                 self.stop()
 		
-	def turnRight(self):
-		print '######## TURNING RIGHT ########'
-
-		self.leftMotor.forward()
-		self.rightMotor.backward()
-
-		self.turn_robot(COUNTS_TURN_MAX_R, COUNTS_TURN_MIN_R, PWM_TURN_R)
 
 	def turnAround(self):
 		print '######## TURNING AROUND ########'
