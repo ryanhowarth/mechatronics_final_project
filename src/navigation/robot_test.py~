@@ -16,18 +16,18 @@ SERVO_PINCH = 7
 
 myRobot = Robot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
 
-#myRobot.moveForward(-1)
+myRobot.moveForward(-1)
 
-#myRobot.leftMotor.setSpeed(1020)
-#myRobot.rightMotor.setSpeed(1000)
+myRobot.leftMotor.setSpeed(1025)
+myRobot.rightMotor.setSpeed(1000)
 
 while True:
-    '''
+   
     print myRobot.leftMotor.getSpeed()    
     print myRobot.rightMotor.getSpeed()
     #myRobot.moveForward(-1)
     #sleep(2)
-    	
+    '''	
     myRobot.turnLeft()
     sleep(2)
 
@@ -45,6 +45,7 @@ while True:
 
     myRobot.dropGift()
     sleep(2)
-    '''
+    
     print myRobot.getIrSensorData()
     sleep(1)
+    '''

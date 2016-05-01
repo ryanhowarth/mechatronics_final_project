@@ -25,6 +25,10 @@ GIFT_NEAR=7.4
 TREE_FAR=9
 TREE_NEAR=7
 
+IR_LEFT = 1
+IR_MIDDLE = 2
+IR_RIGHT = 3
+
 PWM_TURN_R= 800
 PWM_TURN_L = 800
 PWM_DEFAULT = 810
@@ -42,7 +46,9 @@ SIG_TREE = 1
 GAIN_L = 8
 GAIN_R = 8
 
-WALL_THRESH = 20
+MAX_WALL_THRESH = 17
+MIN_WALL_THRESH = 10
+IDEAL_DIST_FROM_WALL = 11
 
 class robot():
 
@@ -74,6 +80,21 @@ class robot():
 		del self.leftPid
 		del self.rightPid
 
+	def moveForwardUntilNoWall(self)
+
+		irData = self.getIrSensorData()
+
+		while irData[IR_RIGHT] < MAX_WALL_THRESH:
+			if checkFront(irData):	
+			correctToRightWall(irData)
+		
+		
+	def correctToRightWall(self, irData):
+		
+	def checkFront(self, irData):
+		return irData(IR_MIDDLE) < MIN_WALL_THRESH:
+		
+			
 
 	def moveForward(self, previous_decision):
 		print '######## MOVING FORWARD ########'

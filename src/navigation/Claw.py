@@ -19,7 +19,7 @@ class claw():
 		#self.resetClaw()
 
 	def __del__(self):
-		self.resetClaw()
+		#self.resetClaw()
 
 		del self.servoControl
 

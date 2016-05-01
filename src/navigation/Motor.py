@@ -28,7 +28,9 @@ class motor():
 
 		self.pwm = pwmPin
 		wp.pinMode(self.pwm, PWM_MODE)
-		self.setSpeed(PWM_MIN)
+		self.speed = PWM_MIN
+		self.setSpeed(self.speed)
+
 
 	def __del__(self):
 		
@@ -58,6 +60,10 @@ class motor():
 			speed = PWM_MIN
 		wp.pwmWrite(self.pwm, speed)
 
+		self.speed = speed
+
+	def getSpeed(self):
+		return self.speed
 	def getPins(self):
 		print self.outA
 		print self.outB
