@@ -6,12 +6,12 @@ import NewRobot
 
 import signal
 import sys
-import IRSensor
+import IrSensor
 
 
 
  
-Rdef signal_handler(signal, frame):
+def signal_handler(signal, frame):
     print 'Exiting'
     del robot
     sys.exit(0)
@@ -20,7 +20,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 #irsensor object
-irSensors = IrSensor.irSensors()
+irSensors = IrSensor.irSensor()
 IR_LEFT = 0
 IR_MIDDLE = 1
 IR_RIGHT = 2
@@ -43,28 +43,71 @@ SERVO_PINCH = 7
 
 robot = NewRobot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
 
-def process_ir_data():
-	irData = self.getIrSensorData()
-	if irData[IR_RIGHT] > 20:
-		robot.turnRight()
-		sleep(1)
-		robot.moveForwardToFindRightWall()
-		sleep(1)
-case = -1
-try:
-	while case != -1:
-		if case == 1:
-			if = (robot.moveForwardUntilNoWall()):
-				sleep(1)
-				robot.moveForwardToClearTurnRadius()
-				sleep(1)
-				case = 10
-		if case == 2:
-			robot.moveForwardToClearTurnRadius()
-		if case == 10:
-		
-			
+sleep_time = 1.5
+THRESH = 17
 
+
+#########################################################################
+################ Function that makes navigation decisions################
+#########################################################################
+
+#Looks at IR Data and commands the robot.
+def process_ir_data():
+	irData = irSensors.getIrSensorData()
+	print "irData: ", irData
+
+	#If both the middle and right paths are blocked the robot turns left.
+	#If the robot hits a dead end then this will get called twice.
+	if irData[IR_RIGHT] < THRESH and irData[IR_MIDDLE] < THRESH:
+		print "TURN LEFT"
+		robot.turnLeft()
+		sleep(sleep_time)
+
+	#if the right path is open turn right (Always following right wall)
+	elif irData[IR_RIGHT] > THRESH:
+		print "TURN RIGHT"
+		robot.turnRight()
+		sleep(sleep_time)
+		print "FIND RIGHT WALL"
+		robot.moveForwardToFindRightWall()
+		sleep(sleep_time)
+	
+	#right wall blocked but middle wall open.
+	#goes until the right wall is blocked or middle wall blocks the robot.
+	#moveForwardUntilNoWall returns false when it is blocked by middle wall.
+	#if it returns true, the robot turns right and tries to find the right
+	#wall again.
+	elif irData[IR_RIGHT] < THRESH and irData[IR_MIDDLE] > THRESH:
+		if (robot.moveForwardUntilNoWall()):
+			print "TIL NO WALL"
+			sleep(sleep_time)
+			print "CLEAR RADIUS"
+			robot.moveForwardToClearTurnRadius()
+			sleep(sleep_time)
+			print "TURN RIGHT"
+			robot.turnRight()
+			sleep(sleep_time)
+			print "FIND RIGHT WALL"
+			robot.moveForwardToFindRightWall()
+			sleep(sleep_time)
+		sleep(sleep_time)
+	
+	
+#robot.turnLeft()
+#robot.stop()
+#sleep(1)
+#robot.turnRight()
+	
+case = 1
+try:
+	#Starting motions
+	robot.moveForwardUntilNoWall()
+	robot.moveForwardToClearTurnRadius()
+	#Run until ctrl-c
+	while 1:
+		process_ir_data()		
+finally:
+	robot.stop()
 
 
 

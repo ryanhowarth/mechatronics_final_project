@@ -1,7 +1,7 @@
 
-
-from Adafruit_ADS1x15 import ADS1x15
 from time import sleep
+from Adafruit_ADS1x15 import ADS1x15
+
 IR_LEFT = 1
 IR_MIDDLE = 2
 IR_RIGHT = 3
@@ -24,7 +24,7 @@ class irSensor():
 		distanceM = []
 		distanceR = []
 
-		for i in xrange(5):
+		for i in xrange(10):
 			voltsL = self.sensor.readADCSingleEnded(IR_LEFT, IR_GAIN, IR_SPS)/1000
 			distanceL.append(self.irDistLeft(voltsL))
 
@@ -34,7 +34,7 @@ class irSensor():
 			voltsR = self.sensor.readADCSingleEnded(IR_RIGHT, IR_GAIN, IR_SPS)/1000
 			distanceR.append(self.irDistRight(voltsR))
 
-			sleep(.005)
+			sleep(.0025)
 
 		finalDistL = sum(distanceL)/len(distanceL)
 		finalDistM = sum(distanceM)/len(distanceM)
