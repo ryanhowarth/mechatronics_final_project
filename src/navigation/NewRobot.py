@@ -7,35 +7,14 @@ from time import sleep
 import time 
 from pixy import easy_pixy_test
 import IrSensor
-COUNTS_FORWARD = 200
-COUNTS_TURN_MAX_L = 160
-COUNTS_TURN_MIN_L = 160
-COUNTS_TURN_MAX_R = 170
-COUNTS_TURN_MIN_R = 170
 
-ADJUST_MAX = 25
-ADJUST_MIN = 25
-
-GIFT_RIGHT=90
-GIFT_LEFT=110
-TREE_RIGHT=100
-TREE_LEFT=120
-GIFT_FAR=8.4
-GIFT_NEAR=7.4
-TREE_FAR=9
-TREE_NEAR=7
-
+#Array Indices that IrSensors are in.
 IR_LEFT = 0
 IR_MIDDLE = 1
 IR_RIGHT = 2
 
-PWM_TURN_R= 800
-PWM_TURN_L = 800
-PWM_DEFAULT = 810
 PWM_MAX = 900
 PWM_MIN = 800
-PWM_ADJUST = 850
-
 
 #Counts for stuff
 TURN_RADIUS_CORR_COUNT = 125
@@ -51,13 +30,11 @@ PWM_FAST_LEFT = 925
 PWM_FAST_RIGHT = 900
 
 
-
+#PID Gains
 P_GAIN = 6
 I_GAIN = 0.02
 D_GAIN = 0.1
 
-SIG_GIFT = 2
-SIG_TREE = 1
 
 #Wall correction gains
 L_GAIN = 2
