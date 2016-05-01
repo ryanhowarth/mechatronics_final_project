@@ -6,7 +6,7 @@ from Adafruit_ADS1x15 import ADS1x15
 from time import sleep
 import time 
 from pixy import easy_pixy_test
-
+import IrSensor
 COUNTS_FORWARD = 200
 COUNTS_TURN_MAX_L = 160
 COUNTS_TURN_MIN_L = 160
@@ -25,16 +25,25 @@ GIFT_NEAR=7.4
 TREE_FAR=9
 TREE_NEAR=7
 
-IR_LEFT = 1
-IR_MIDDLE = 2
-IR_RIGHT = 3
+IR_LEFT = 0
+IR_MIDDLE = 1
+IR_RIGHT = 2
 
 PWM_TURN_R= 800
 PWM_TURN_L = 800
 PWM_DEFAULT = 810
-PWM_MAX = 850
-PWM_MIN = 770
+PWM_MAX = 900
+PWM_MIN = 800
 PWM_ADJUST = 850
+
+#Default pwm values to go straight
+PWM_NOMINAL_LEFT = 832
+PWM_NOMINAL_RIGHT = 800
+#at higher speed (Not used right now)
+PWM_FAST_LEFT = 925
+PWM_FAST_RIGHT = 900
+
+
 
 P_GAIN = 6
 I_GAIN = 0.02
@@ -43,12 +52,21 @@ D_GAIN = 0.1
 SIG_GIFT = 2
 SIG_TREE = 1
 
-GAIN_L = 8
-GAIN_R = 8
-
+#Wall correction gains
+L_GAIN = 2
+R_GAIN = 2
+#Wall Thresholds
 MAX_WALL_THRESH = 17
-MIN_WALL_THRESH = 10
+#MIN_WALL_THRESH = 10
+MIN_FRONT_WALL_THRESH = 6
 IDEAL_DIST_FROM_WALL = 11
+
+#Control Parameters
+loop_freq = 5.0
+
+
+#Objects
+#irSensors = []
 
 class robot():
 
@@ -79,30 +97,88 @@ class robot():
 		del self.encoders
 		del self.leftPid
 		del self.rightPid
-
-	def moveForwardUntilNoWall(self)
-
+	#moves robot forward and the right wall disapears.
+	# does on the fly positional correction based on location of right wall.
+	@profile
+	def moveForwardUntilNoWall(self):
+		
 		irData = self.getIrSensorData()
 
 		while irData[IR_RIGHT] < MAX_WALL_THRESH:
-			if checkFront(irData):	
-			correctToRightWall(irData)
+			start_time = time.time() #Must always be first line in fuction.
+			irData = self.getIrSensorData()
+			
+			if self.checkFrontWall(irData):
+				#Write code to stop the robot
+				pass
+			
+			
+			self.sleepToEndLoop(start_time)
+			self.moveForward()
+			self.correctToRightWall(irData)
+		self.stop()
+
 		
-		
+	#checks to see how far robot is from right wall.
+	#if it is within +/- 2 it does nothing, otherwise calls correction functions
 	def correctToRightWall(self, irData):
 		
-	def checkFront(self, irData):
-		return irData(IR_MIDDLE) < MIN_WALL_THRESH:
-		
-			
+		if irData[IR_RIGHT] > IDEAL_DIST_FROM_WALL - 2 and irData[IR_RIGHT] <IDEAL_DIST_FROM_WALL + 2:
+			return 
+		elif irData[IR_RIGHT] < IDEAL_DIST_FROM_WALL:
+			self.correctLeft(IDEAL_DIST_FROM_WALL - irData[IR_RIGHT])
+		else: 	
+			self.correctRight(irData[IR_RIGHT] - IDEAL_DIST_FROM_WALL)
 
-	def moveForward(self, previous_decision):
-		print '######## MOVING FORWARD ########'
+	#slight correction to the left
+	def correctLeft(self, error):
+		correction = int((error * error) * L_GAIN)
+		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT - correction)
+		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + correction)
+		print "PWM_VALS: ", [PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]
+	#slight correction to the right
+	def correctRight(self, error):
+		correction = int((error * error)*R_GAIN)
+		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + correction)
+		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT - correction)
+		print "PWM_VALS: ", [PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]
+	
+
+
+	def checkFrontWall(self, irData):
+		return irData[IR_MIDDLE] < MIN_FRONT_WALL_THRESH
+		
+	#This function sleeps at the end of loop in order to keep a desired control freqency
+	#This is specified in the global variable 'loop_freq'
+	#If the freqency is set to high and the code can't keep up, it prints errors.	
+	def sleepToEndLoop(self, start_time):
+		loop_run_time = time.time() - start_time
+		time_in_one_loop_cycle = 1.0 / loop_freq
+		sleep_time = time_in_one_loop_cycle - loop_run_time
+		if sleep_time < 0:
+			print "YOUR LOOP FREQUENCY IS SET T00 HIGH."
+			print "actual running frequency is lower than specified."
+		else:
+			sleep(sleep_time)
+
+	#Moves robot foreward at nominial speed indefinitely.
+	def moveForward(self, previous_decision=-1):#remove previous decision and put speed arguent at some point 
 
 		self.leftMotor.forward()
 		self.rightMotor.forward()
+		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT)
+		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT)
+		#self.move_robot(previous_decision)
 
-		self.move_robot(previous_decision)
+	def stop(self):
+
+		self.leftMotor.stop()
+		self.rightMotor.stop()
+	
+
+
+
+
 
 	def turnLeft(self):
 		print '######## TURNING LEFT ########'
@@ -280,10 +356,6 @@ class robot():
 	def getIrSensorData(self):
 		return self.irSensors.getIrSensorData()
 
-	def stop(self):
-
-		self.leftMotor.stop()
-		self.rightMotor.stop()
 	
 	def pickupGift(self):
 		self.claw.pickupGift()
@@ -292,130 +364,7 @@ class robot():
 		self.claw.dropGift()
 
 	def detectItem(self):
-		blocks = self.pixyObj.get_blocks()
-		signature = blocks[0]
-		if signature == SIG_GIFT:
-			return 'gift'
-		elif signature == SIG_TREE:
-			return 'tree'
-        	
-		return ''
-
+		pass
 	# Returns true if pickup or dropoff succesful
 	def approachTree(self):
-		x=self.pixyObj.get_blocks()
-		ir_data = self.getIrSensorData()
-		while (x[2] <= TREE_RIGHT or x[2] >= TREE_LEFT) or (ir_data[1] >= TREE_FAR or ir_data[1] <= TREE_NEAR):
-			while x[2]<=TREE_RIGHT:
-				print 'Right'
-				print x[2]
-				self.adjustRight()
-				x=self.pixyObj.get_blocks()
-			while x[2]>=TREE_LEFT:
-				print 'Left'
-				print x[2]
-				self.adjustLeft()
-				x=self.pixyObj.get_blocks()
-			if ir_data[1] >= TREE_FAR:
-				print 'Forward'
-				self.adjustForward()
-                                ir_data = self.getIrSensorData()
-				print ir_data[1]
-			elif ir_data[1] <= TREE_NEAR:
-				print 'Back'
-				self.adjustBackward()
-				ir_data = self.getIrSensorData()
-				print ir_data[1]
-			x=self.pixyObj.get_blocks()
-			
-		sleep(0.5)
-		print 'Reached dropoff location'
-		self.dropGift()
-		return True
-
-	def approachGift(self):
-		x = self.pixyObj.get_blocks()
-		ir_data = self.getIrSensorData()
-        	while (x[2]<=GIFT_RIGHT or x[2]>=GIFT_LEFT) or (ir_data[1] >= GIFT_FAR or ir_data[1] <= GIFT_NEAR):
-			while x[2]<=GIFT_RIGHT:
-				print 'Right'
-				self.adjustRight()
-				x=self.pixyObj.get_blocks()
-			while x[2]>=GIFT_LEFT:
-				print 'Left'
-				self.adjustLeft()
-				x=self.pixyObj.get_blocks()
-			if ir_data[1] >= GIFT_FAR:
-				print 'Forward'
-				self.adjustForward()
-				ir_data = self.getIrSensorData()
-			elif ir_data[1] <= GIFT_NEAR:
-				print 'Back'
-				self.adjustBackward()
-				ir_data = self.getIrSensorData()
-			x=self.pixyObj.get_blocks()
-		
-		sleep(0.5)
-		print 'Reached pickup location'
-		
-		self.pickupGift()
-		return True
-import Motor
-import Claw
-import Encoders
-import pid_control
-from Adafruit_ADS1x15 import ADS1x15
-from time import sleep
-import time 
-from pixy import easy_pixy_test
-
-COUNTS_FORWARD = 200
-COUNTS_TURN_MAX_L = 160
-COUNTS_TURN_MIN_L = 160
-COUNTS_TURN_MAX_R = 170
-COUNTS_TURN_MIN_R = 170
-
-ADJUST_MAX = 25
-ADJUST_MIN = 25
-
-GIFT_RIGHT=90
-GIFT_LEFT=110
-TREE_RIGHT=100
-TREE_LEFT=120
-GIFT_FAR=8.4
-GIFT_NEAR=7.4
-TREE_FAR=9
-TREE_NEAR=7
-
-PWM_TURN_R= 800
-PWM_TURN_L = 800
-PWM_DEFAULT = 810
-PWM_MAX = 850
-PWM_MIN = 770
-PWM_ADJUST = 850
-
-P_GAIN = 6
-I_GAIN = 0.02
-D_GAIN = 0.1
-
-SIG_GIFT = 2
-import Motor
-import Claw
-import Encoders
-import pid_control
-import IrSensor
-import Motor
-import Claw
-import Encoders
-import Motor
-import Claw
-import Encoders
-import pid_control
-from Adafruit_ADS1x15 import ADS1x15
-from time import sleep
-import Motor
-import Claw
-import Encoders
-import pid_control
-from Adafruit_ADS1x15 import ADS1x15
-from time import sleep
+		pass
