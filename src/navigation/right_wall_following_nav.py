@@ -47,7 +47,7 @@ SERVO_PINCH = 7
 
 robot = NewRobot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
 
-sleep_time = 1.5
+sleep_time = 1.0
 THRESH = 17
 
 

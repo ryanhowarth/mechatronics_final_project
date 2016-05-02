@@ -21,7 +21,7 @@ PWM_MAX = 900
 PWM_MIN = 800
 
 #Counts for stuff
-TURN_RADIUS_CORR_COUNT = 150
+TURN_RADIUS_CORR_COUNT = 160
 COUNT_TURN_LEFT = 155
 COUNT_TURN_RIGHT = 155
 TURNING_STOPPING_SPEED = 600
@@ -98,7 +98,7 @@ class robot():
 		while irData[IR_RIGHT] < MAX_WALL_THRESH:
 			start_time = time.time() #Must always be first line in fuction.
 			irData = self.getIrSensorData()
-			
+			self.logger.debug("irData: " + str(irData))
 			if not self.checkFrontWall(irData):
 				return False
 			
@@ -142,8 +142,13 @@ class robot():
 			start_time = time.time()
 			irData = self.getIrSensorData()
 			self.moveForward()
+			#Get encoder data
 			Rcount = self.encoders.get_right_wheel_count() - init_Rcount
 			Lcount = self.encoders.get_left_wheel_count() - init_Lcount
+			#Check Front Wall
+			if not self.checkFrontWall(irData):
+				return False
+			
 			self.sleepToEndLoop(start_time)
 			self.correctToLeftWall(irData)
 		self.stop()
@@ -189,12 +194,12 @@ class robot():
 		Rcount = 0
 		turningoffset = 75 #higher speed to turn more accurately
                 while Lcount < num_of_counts and Rcount < num_of_counts:
-                        
+                        #Set speed
 			self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + turningoffset)
                         self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + turningoffset)
-
                         sleep(0.005)
-
+			
+			#Get encoder data
                         Lcount = abs(self.encoders.get_right_wheel_count() - init_Rcount)
                         Rcount = abs(self.encoders.get_left_wheel_count() - init_Lcount)
 
@@ -204,7 +209,8 @@ class robot():
 	#if it is within +/- 2 it does nothing, otherwise calls correction functions
 	def correctToRightWall(self, irData):
 		if (irData[IR_RIGHT] > MAX_WALL_THRESH):
-			self.logger.warn("RIGHT WALL TOO FAR AWAY. Consider using LEFT")
+			#self.logger.warn("RIGHT WALL TOO FAR AWAY. Consider using LEFT")
+			self.correctToLeftWall(irData)
 			
 		if irData[IR_RIGHT] > IDEAL_DIST_FROM_WALL - 1 and irData[IR_RIGHT] <IDEAL_DIST_FROM_WALL + 1:
 			return 
@@ -232,22 +238,22 @@ class robot():
 	def correctLeft(self, error):
 		#Calculate correction differently based on distance away
 		if (error < 3):
-			correction = int(error * (L_GAIN + 5))
+			correction = int(error * (L_GAIN + 10))
 		else:
 			correction = int((error * error) * L_GAIN)
 		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT - correction)
 		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + correction)
-		self.logger.debug("PWM_VALS: " +  str([PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]))
+		self.logger.debug("CORRECT LEFT PWM_VALS: " +  str([PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]))
 	#slight correction to the right
 	#Calulates error exponetially
 	def correctRight(self, error):
 		if (error < 3):
-			correction = int(error * (R_GAIN + 5))
+			correction = int(error * (R_GAIN + 10))
 		else:
 			correction = int((error * error)*R_GAIN)
 		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + correction)
 		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT - correction)
-		self.logger.debug("PWM_VALS: " + str([PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]))
+		self.logger.debug("CORRECT RIGHT PWM_VALS: " + str([PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]))
 	
 
 	#Checks if robot is going to hit front wall.
