@@ -97,11 +97,11 @@ def process_ir_data():
 		sleep(sleep_time)
 	
 	
-robot.turnLeft()
-robot.stop()
-sleep(1)
-robot.turnRight()
-'''	
+#robot.turnLeft()
+#robot.stop()
+#sleep(1)
+#robot.turnRight()
+	
 case = 1
 try:
 	#Starting motions
@@ -113,7 +113,7 @@ try:
 finally:
 	robot.stop()
 
-'''
+
 
 
 		

@@ -21,10 +21,10 @@ PWM_MAX = 900
 PWM_MIN = 800
 
 #Counts for stuff
-TURN_RADIUS_CORR_COUNT = 140
-COUNT_TURN_LEFT = 160
-COUNT_TURN_RIGHT = 160
-
+TURN_RADIUS_CORR_COUNT = 150
+COUNT_TURN_LEFT = 155
+COUNT_TURN_RIGHT = 155
+TURNING_STOPPING_SPEED = 600
 
 #Default pwm values to go straight
 PWM_NOMINAL_LEFT = 832
@@ -47,7 +47,7 @@ R_GAIN = 2
 MAX_WALL_THRESH = 17
 #MIN_WALL_THRESH = 10
 MIN_FRONT_WALL_THRESH = 8
-IDEAL_DIST_FROM_WALL = 11
+IDEAL_DIST_FROM_WALL = 11.5
 
 #Control Parameters
 loop_freq = 5.0
@@ -149,21 +149,33 @@ class robot():
 		self.stop()
 	
 	def turnLeft(self):
+		#Turn the motor a specified number of counts
 		self.leftMotor.backward()
 		self.rightMotor.forward()
 		self.turn_robot2(COUNT_TURN_LEFT)
 		
-		self.leftMotor.backward()
-		self.rightMotor.forward()
-		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + turningoffset)
-                self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + turningoffset)
-		
+		#Stop the turn by driving the motor the other way briefly.
+		self.leftMotor.forward()
+		self.rightMotor.backward()
+		self.leftMotor.setSpeed(TURNING_STOPPING_SPEED)
+                self.rightMotor.setSpeed(TURNING_STOPPING_SPEED)
+		sleep(0.1)
+		self.stop()	
 		
 	
 	def turnRight(self):
+		#Turn the motor a specified number of counts
 		self.leftMotor.forward()
 		self.rightMotor.backward()
 		self.turn_robot2(COUNT_TURN_RIGHT)
+		
+		#Stop the turn by driving the motor the other way briefly.
+		self.leftMotor.backward()
+		self.rightMotor.forward()
+		self.leftMotor.setSpeed(TURNING_STOPPING_SPEED)
+                self.rightMotor.setSpeed(TURNING_STOPPING_SPEED)
+		sleep(0.1)
+		self.stop()	
 			
 #############################################################################
 ############### Sub Functions Called by Top Level Functions #################
@@ -175,8 +187,8 @@ class robot():
                 init_Lcount = self.encoders.get_left_wheel_count()
 		Lcount = 0
 		Rcount = 0
-		turningoffset = 50 #higher speed to turn more accurately
-                while Lcount < (num_of_counts-10) and Rcount < num_of_counts:
+		turningoffset = 75 #higher speed to turn more accurately
+                while Lcount < num_of_counts and Rcount < num_of_counts:
                         
 			self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + turningoffset)
                         self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + turningoffset)
@@ -218,15 +230,21 @@ class robot():
 	#slight correction to the left.
 	#Calulates error exponetially
 	def correctLeft(self, error):
-		
-		correction = int((error * error) * L_GAIN)
+		#Calculate correction differently based on distance away
+		if (error < 3):
+			correction = int(error * (L_GAIN + 5))
+		else:
+			correction = int((error * error) * L_GAIN)
 		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT - correction)
 		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + correction)
 		self.logger.debug("PWM_VALS: " +  str([PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]))
 	#slight correction to the right
 	#Calulates error exponetially
 	def correctRight(self, error):
-		correction = int((error * error)*R_GAIN)
+		if (error < 3):
+			correction = int(error * (R_GAIN + 5))
+		else:
+			correction = int((error * error)*R_GAIN)
 		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + correction)
 		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT - correction)
 		self.logger.debug("PWM_VALS: " + str([PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]))
