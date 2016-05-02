@@ -8,6 +8,10 @@ import signal
 import sys
 import IrSensor
 
+#logging modules
+import logging, coloredlogs
+logger = logging.getLogger('maze_run')
+coloredlogs.install(level='INFO')
 
 
  
@@ -54,21 +58,21 @@ THRESH = 17
 #Looks at IR Data and commands the robot.
 def process_ir_data():
 	irData = irSensors.getIrSensorData()
-	print "irData: ", irData
+	logger.info("irData: " + str(irData))
 
 	#If both the middle and right paths are blocked the robot turns left.
 	#If the robot hits a dead end then this will get called twice.
 	if irData[IR_RIGHT] < THRESH and irData[IR_MIDDLE] < THRESH:
-		print "TURN LEFT"
+		logger.info("TURN LEFT")
 		robot.turnLeft()
 		sleep(sleep_time)
 
 	#if the right path is open turn right (Always following right wall)
 	elif irData[IR_RIGHT] > THRESH:
-		print "TURN RIGHT"
+		logger.info("TURN RIGHT")
 		robot.turnRight()
 		sleep(sleep_time)
-		print "FIND RIGHT WALL"
+		logger.info("FIND RIGHT WALL")
 		robot.moveForwardToFindRightWall()
 		sleep(sleep_time)
 	
@@ -79,25 +83,25 @@ def process_ir_data():
 	#wall again.
 	elif irData[IR_RIGHT] < THRESH and irData[IR_MIDDLE] > THRESH:
 		if (robot.moveForwardUntilNoWall()):
-			print "TIL NO WALL"
+			logger.info("TIL NO WALL")
 			sleep(sleep_time)
-			print "CLEAR RADIUS"
+			logger.info("CLEAR RADIUS")
 			robot.moveForwardToClearTurnRadius()
 			sleep(sleep_time)
-			print "TURN RIGHT"
+			logger.info("TURN RIGHT")
 			robot.turnRight()
 			sleep(sleep_time)
-			print "FIND RIGHT WALL"
+			logger.info("FIND RIGHT WALL")
 			robot.moveForwardToFindRightWall()
 			sleep(sleep_time)
 		sleep(sleep_time)
 	
 	
-#robot.turnLeft()
-#robot.stop()
-#sleep(1)
-#robot.turnRight()
-	
+robot.turnLeft()
+robot.stop()
+sleep(1)
+robot.turnRight()
+'''	
 case = 1
 try:
 	#Starting motions
@@ -109,7 +113,7 @@ try:
 finally:
 	robot.stop()
 
-
+'''
 
 
 		

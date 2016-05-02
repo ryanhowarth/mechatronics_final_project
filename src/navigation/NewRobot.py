@@ -8,6 +8,10 @@ import time
 from pixy import easy_pixy_test
 import IrSensor
 
+#logging modules
+import logging, coloredlogs
+
+
 #Array Indices that IrSensors are in.
 IR_LEFT = 0
 IR_MIDDLE = 1
@@ -17,9 +21,9 @@ PWM_MAX = 900
 PWM_MIN = 800
 
 #Counts for stuff
-TURN_RADIUS_CORR_COUNT = 125
+TURN_RADIUS_CORR_COUNT = 140
 COUNT_TURN_LEFT = 160
-COUNT_TURN_RIGHT = 145
+COUNT_TURN_RIGHT = 160
 
 
 #Default pwm values to go straight
@@ -51,28 +55,29 @@ loop_freq = 5.0
 
 #Objects
 #irSensors = []
+logger = []
 
 class robot():
 
 	def __init__(self, leftMotorOutA, leftMotorOutB, leftPwm, rightMotorOutA, rightMotorOutB, rightPwm, liftServoPin, pinchServoPin):
-		print 'create robot'
-
+		#Set up colorized logger
+		self.logger = logging.getLogger('maze_run')
+		coloredlogs.install(level='DEBUG')
+		
+		#Create objects related to robot
+		self.logger.info('create robot')
 		self.leftMotor = Motor.motor(leftMotorOutA, leftMotorOutB, leftPwm)
 		self.rightMotor = Motor.motor(rightMotorOutA, rightMotorOutB, rightPwm)
-
 		self.claw = Claw.claw(liftServoPin, pinchServoPin)
-
 		self.irSensors = IrSensor.irSensor()
-
 		self.encoders = Encoders.easy_encoders()
-
 		self.leftPid = pid_control.easy_PID(P_GAIN, I_GAIN, D_GAIN)
 		self.rightPid = pid_control.easy_PID(P_GAIN, I_GAIN, D_GAIN)
-
       		self.pixyObj = easy_pixy_test.easy_pixy()
 
+
 	def __del__(self):
-		print 'shut down robot'
+		self.logger.info('shut down robot')
 
 		del self.leftMotor
 		del self.rightMotor
@@ -147,6 +152,13 @@ class robot():
 		self.leftMotor.backward()
 		self.rightMotor.forward()
 		self.turn_robot2(COUNT_TURN_LEFT)
+		
+		self.leftMotor.backward()
+		self.rightMotor.forward()
+		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + turningoffset)
+                self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + turningoffset)
+		
+		
 	
 	def turnRight(self):
 		self.leftMotor.forward()
@@ -163,8 +175,8 @@ class robot():
                 init_Lcount = self.encoders.get_left_wheel_count()
 		Lcount = 0
 		Rcount = 0
-		turningoffset = 25
-                while Lcount < num_of_counts and Rcount < num_of_counts:
+		turningoffset = 50 #higher speed to turn more accurately
+                while Lcount < (num_of_counts-10) and Rcount < num_of_counts:
                         
 			self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + turningoffset)
                         self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + turningoffset)
@@ -180,7 +192,7 @@ class robot():
 	#if it is within +/- 2 it does nothing, otherwise calls correction functions
 	def correctToRightWall(self, irData):
 		if (irData[IR_RIGHT] > MAX_WALL_THRESH):
-			print "RIGHT WALL TOO FAR AWAY. Consider using LEFT"
+			self.logger.warn("RIGHT WALL TOO FAR AWAY. Consider using LEFT")
 			
 		if irData[IR_RIGHT] > IDEAL_DIST_FROM_WALL - 1 and irData[IR_RIGHT] <IDEAL_DIST_FROM_WALL + 1:
 			return 
@@ -193,14 +205,14 @@ class robot():
 	#if it is within +/- 2 it does nothing, otherwise calls correction functions
 	def correctToLeftWall(self, irData):
 		if (irData[IR_LEFT] > MAX_WALL_THRESH):
-			print "LEFT WALL TOO FAR AWAY."
+			self.logger.warn("LEFT WALL TOO FAR AWAY.")
 			
 		if irData[IR_LEFT] > IDEAL_DIST_FROM_WALL - 2 and irData[IR_LEFT] <IDEAL_DIST_FROM_WALL + 2:
 			return 
 		elif irData[IR_LEFT] < IDEAL_DIST_FROM_WALL:
-			self.correctRight(IDEAL_DIST_FROM_WALL - irData[IR_LEFT])
+			self.correctRight((IDEAL_DIST_FROM_WALL - irData[IR_LEFT]) / 2)
 		else: 	
-			self.correctLeft(irData[IR_LEFT] - IDEAL_DIST_FROM_WALL)
+			self.correctLeft((irData[IR_LEFT] - IDEAL_DIST_FROM_WALL) / 2)
 	
 
 	#slight correction to the left.
@@ -210,14 +222,14 @@ class robot():
 		correction = int((error * error) * L_GAIN)
 		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT - correction)
 		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + correction)
-		print "PWM_VALS: ", [PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]
+		self.logger.debug("PWM_VALS: " +  str([PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]))
 	#slight correction to the right
 	#Calulates error exponetially
 	def correctRight(self, error):
 		correction = int((error * error)*R_GAIN)
 		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + correction)
 		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT - correction)
-		print "PWM_VALS: ", [PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]
+		self.logger.debug("PWM_VALS: " + str([PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]))
 	
 
 	#Checks if robot is going to hit front wall.
@@ -225,7 +237,7 @@ class robot():
 	def checkFrontWall(self, irData):
 		if irData[IR_MIDDLE] < MIN_FRONT_WALL_THRESH:
 			self.stop()
-			print "STOPPED BECAUSE WALL TOO CLOSE"
+			self.logger.debug("STOPPED BECAUSE WALL TOO CLOSE")
 			return False
 		else:
 			return True
@@ -238,8 +250,8 @@ class robot():
 		time_in_one_loop_cycle = 1.0 / loop_freq
 		sleep_time = time_in_one_loop_cycle - loop_run_time
 		if sleep_time < 0:
-			print "YOUR LOOP FREQUENCY IS SET T00 HIGH."
-			print "actual running frequency is lower than specified."
+			self.logger.error("YOUR LOOP FREQUENCY IS SET T00 HIGH.")
+			self.logger.error("actual running frequency is lower than specified.")
 		else:
 			sleep(sleep_time)
 
