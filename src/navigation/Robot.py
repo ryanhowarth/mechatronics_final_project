@@ -16,21 +16,23 @@ COUNTS_TURN_MIN_R = 170
 ADJUST_MAX = 25
 ADJUST_MIN = 25
 
-GIFT_RIGHT=90
+GIFT_RIGHT=100
 GIFT_LEFT=110
 TREE_RIGHT=100
 TREE_LEFT=120
-GIFT_FAR=8.4
-GIFT_NEAR=7.4
+#GIFT_FAR=8.4
+#GIFT_NEAR=7.4
+GIFT_FAR=11.0
+GIFT_NEAR=10.0
 TREE_FAR=9
-TREE_NEAR=7
+TREE_NEAR=8
 
 PWM_TURN_R= 800
 PWM_TURN_L = 800
 PWM_DEFAULT = 810
 PWM_MAX = 850
 PWM_MIN = 770
-PWM_ADJUST = 850
+PWM_ADJUST = 770
 
 P_GAIN = 6
 I_GAIN = 0.02
@@ -93,17 +95,25 @@ class robot():
 	
 	def adjustLeft(self):
 		print '####### ADJUST LEFT #######'
-		self.leftMotor.backward()
+		#self.leftMotor.backward()
 		self.rightMotor.forward()
+		#self.turn_robot(ADJUST_MAX, ADJUST_MIN, PWM_TURN_L)
+		#self.leftMotor.setSpeed(PWM_ADJUST)
+                self.rightMotor.setSpeed(PWM_ADJUST)
+                sleep(0.01)
+                self.stop()
 
-		self.turn_robot(ADJUST_MAX, ADJUST_MIN, PWM_TURN_L)
 
 	def adjustRight(self):
 		print '####### ADJUST RIGHT #######'		
 		self.leftMotor.forward()
-		self.rightMotor.backward()
+		#self.rightMotor.backward()
+		#self.turn_robot(ADJUST_MIN, ADJUST_MAX, PWM_TURN_R)
+		self.leftMotor.setSpeed(PWM_ADJUST)
+                #self.rightMotor.setSpeed(PWM_ADJUST)
+                sleep(0.01)
+                self.stop()
 
-		self.turn_robot(ADJUST_MIN, ADJUST_MAX, PWM_TURN_R)
 
 	def adjustForward(self):
 		print '####### ADJUST FORWARD #######'
@@ -111,7 +121,7 @@ class robot():
 		self.rightMotor.forward()
 		self.leftMotor.setSpeed(PWM_ADJUST)
 		self.rightMotor.setSpeed(PWM_ADJUST)
-                sleep(0.25)
+                sleep(0.05)
                 self.stop()
 	
 	def adjustBackward(self):
@@ -120,7 +130,7 @@ class robot():
 		self.rightMotor.backward()
 		self.leftMotor.setSpeed(PWM_ADJUST)
 		self.rightMotor.setSpeed(PWM_ADJUST)
-                sleep(0.25)
+                sleep(0.05)
                 self.stop()
 		
 	def turnRight(self):
@@ -307,7 +317,7 @@ class robot():
 				print ir_data[1]
 			x=self.pixyObj.get_blocks()
 			
-		sleep(0.5)
+		sleep(0.2)
 		print 'Reached dropoff location'
 		self.dropGift()
 		return True
@@ -315,6 +325,7 @@ class robot():
 	def approachGift(self):
 		x = self.pixyObj.get_blocks()
 		ir_data = self.getIrSensorData()
+		
         	while (x[2]<=GIFT_RIGHT or x[2]>=GIFT_LEFT) or (ir_data[1] >= GIFT_FAR or ir_data[1] <= GIFT_NEAR):
 			while x[2]<=GIFT_RIGHT:
 				print 'Right'
@@ -327,74 +338,36 @@ class robot():
 			if ir_data[1] >= GIFT_FAR:
 				print 'Forward'
 				self.adjustForward()
-				ir_data = self.getIrSensorData()
+				#sleep(0.1)
+			#	ir_data = self.getIrSensorData()
+			#	print 'd=',ir_data[1]
 			elif ir_data[1] <= GIFT_NEAR:
 				print 'Back'
 				self.adjustBackward()
-				ir_data = self.getIrSensorData()
+				#sleep(0.1)
+			#	ir_data = self.getIrSensorData()
+			#	print 'd=',ir_data[1]
+			#sleep(0.2)
+			ir_data = self.getIrSensorData()
+			print 'd=',ir_data[1]
+			'''
+			if ir_data[1]>15 and ir_data[1]<30:
+				t=(ir_data[1]-15)/5.5
+				self.leftMotor.forward()
+				self.rightMotor.forward()
+				self.leftMotor.setSpeed(PWM_ADJUST)
+				self.rightMotor.setSpeed(PWM_ADJUST)
+                		sleep(t)
+		                self.stop()
 			x=self.pixyObj.get_blocks()
-		
-		sleep(0.5)
+			'''
+		sleep(0.2)
 		print 'Reached pickup location'
+
+#		self.rightMotor.backward()
+#                self.rightMotor.setSpeed(PWM_ADJUST)
+#                sleep(0.01)
+#                self.stop()
 		
 		self.pickupGift()
 		return True
-import Motor
-import Claw
-import Encoders
-import pid_control
-from Adafruit_ADS1x15 import ADS1x15
-from time import sleep
-import time 
-from pixy import easy_pixy_test
-
-COUNTS_FORWARD = 200
-COUNTS_TURN_MAX_L = 160
-COUNTS_TURN_MIN_L = 160
-COUNTS_TURN_MAX_R = 170
-COUNTS_TURN_MIN_R = 170
-
-ADJUST_MAX = 25
-ADJUST_MIN = 25
-
-GIFT_RIGHT=90
-GIFT_LEFT=110
-TREE_RIGHT=100
-TREE_LEFT=120
-GIFT_FAR=8.4
-GIFT_NEAR=7.4
-TREE_FAR=9
-TREE_NEAR=7
-
-PWM_TURN_R= 800
-PWM_TURN_L = 800
-PWM_DEFAULT = 810
-PWM_MAX = 850
-PWM_MIN = 770
-PWM_ADJUST = 850
-
-P_GAIN = 6
-I_GAIN = 0.02
-D_GAIN = 0.1
-
-SIG_GIFT = 2
-import Motor
-import Claw
-import Encoders
-import pid_control
-import IrSensor
-import Motor
-import Claw
-import Encoders
-import Motor
-import Claw
-import Encoders
-import pid_control
-from Adafruit_ADS1x15 import ADS1x15
-from time import sleep
-import Motor
-import Claw
-import Encoders
-import pid_control
-from Adafruit_ADS1x15 import ADS1x15
-from time import sleep

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import Robot
+import NewRobot
 from time import sleep
 
 PWM_L = 13
@@ -13,11 +13,12 @@ INPUT_2_RIGHT = 8
 SERVO_LIFT = 0
 SERVO_PINCH = 7
 
-myRobot = Robot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
+myRobot = NewRobot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
 	
 flag=True
 while flag:
   item=myRobot.detectItem()
+  print item
   print item
   if item=='gift':
       pickedup=False

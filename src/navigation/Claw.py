@@ -1,11 +1,11 @@
 import Adafruit_PCA9685
 from time import sleep
 
-LOWER_PICKUP = 400
+LOWER_PICKUP = 395
 LOWER_DROP = 360
 RAISE_SERVO = 170
 OPEN_SERVO = 400
-CLOSE_SERVO = 220
+CLOSE_SERVO = 250
 
 class claw():
 
@@ -68,4 +68,8 @@ class claw():
 		self.servoControl.set_pwm(self.pinchServo, 0, 0)
 		self.servoControl.set_pwm(self.liftServo, 0, 0)
 
-
+if __name__=="__main__":
+	SERVO_LIFT = 0
+	SERVO_PINCH = 7
+	Claw=claw(SERVO_LIFT,SERVO_PINCH)
+	Claw.pickupGift()

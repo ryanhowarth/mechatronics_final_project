@@ -57,6 +57,26 @@ loop_freq = 5.0
 #irSensors = []
 logger = []
 
+#DELIVERY PARAMETERS
+#Motor turning PWM
+ADJUST_MAX = 25
+ADJUST_MIN = 25
+PWM_ADJUST = 850
+ADJUST_LR_TIME=.02
+ADJUST_FB_TIME=.05
+#Pixy
+SIG_TREE=1
+SIG_GIFT=2
+GIFT_RIGHT=90
+GIFT_LEFT=100
+TREE_RIGHT=100
+TREE_LEFT=120
+#IR
+GIFT_FAR=9
+GIFT_NEAR=8
+TREE_FAR=9
+TREE_NEAR=8
+
 class robot():
 
 	def __init__(self, leftMotorOutA, leftMotorOutB, leftPwm, rightMotorOutA, rightMotorOutB, rightPwm, liftServoPin, pinchServoPin):
@@ -299,4 +319,145 @@ class robot():
 	def getIrSensorData(self):
 		return self.irSensors.getIrSensorData()
 
+	# ----------------------- DELIVERY MECHANISM ------------------------
+	def adjustLeftTowardItem(self):
+		print '####### ADJUST LEFT #######'
+		#self.leftMotor.backward()
+		self.rightMotor.forward()
+		#self.turn_robot(ADJUST_MAX, ADJUST_MIN, PWM_TURN_L)
+		#self.leftMotor.setSpeed(PWM_ADJUST)
+                self.rightMotor.setSpeed(PWM_ADJUST)
+                sleep(ADJUST_LR_TIME)
+                self.stop()
+
+
+	def adjustRightTowardItem(self):
+		print '####### ADJUST RIGHT #######'		
+		self.leftMotor.forward()
+		#self.rightMotor.backward()
+		#self.turn_robot(ADJUST_MIN, ADJUST_MAX, PWM_TURN_R)
+		self.leftMotor.setSpeed(PWM_ADJUST)
+                #self.rightMotor.setSpeed(PWM_ADJUST)
+                sleep(ADJUST_LR_TIME)
+                self.stop()
+
+
+	def adjustForwardTowardItem(self):
+		print '####### ADJUST FORWARD #######'
+		self.leftMotor.forward()
+		self.rightMotor.forward()
+		self.leftMotor.setSpeed(PWM_ADJUST)
+		self.rightMotor.setSpeed(PWM_ADJUST)
+                sleep(ADJUST_FB_TIME)
+                self.stop()
 	
+	def adjustBackwardTowardItem(self):
+		print '####### ADJUST BACK #######'
+		self.leftMotor.backward()
+		self.rightMotor.backward()
+		self.leftMotor.setSpeed(PWM_ADJUST)
+		self.rightMotor.setSpeed(PWM_ADJUST)
+                sleep(ADJUST_FB_TIME)
+                self.stop()
+
+	def pickupGift(self):
+		self.claw.pickupGift()
+
+	def dropGift(self):
+		self.claw.dropGift()
+
+	def detectItem(self):
+		blocks = self.pixyObj.get_blocks()
+		signature = blocks[0]
+		if signature == SIG_GIFT:
+			return 'gift'
+		elif signature == SIG_TREE:
+			return 'tree'
+        	
+		return ''
+
+	# Returns true if pickup or dropoff succesful
+	def approachTree(self):
+		x=self.pixyObj.get_blocks()
+		ir_data = self.getIrSensorData()
+		while (x[2] <= TREE_RIGHT or x[2] >= TREE_LEFT) or (ir_data[1] >= TREE_FAR or ir_data[1] <= TREE_NEAR):
+			print 'Tree block ', x[2]
+			while x[2]<=TREE_RIGHT:
+				print 'Right'
+				print x[2]
+				self.adjustRightTowardItem()
+				x=self.pixyObj.get_blocks()
+			while x[2]>=TREE_LEFT:
+				print 'Left'
+				print x[2]
+				self.adjustLeftTowardItem()
+				x=self.pixyObj.get_blocks()
+			if ir_data[1] >= TREE_FAR:
+				print 'Forward'
+				self.adjustForwardTowardItem()
+                                ir_data = self.getIrSensorData()
+				print ir_data[1]
+			elif ir_data[1] <= TREE_NEAR:
+				print 'Back'
+				self.adjustBackwardTowardItem()
+				ir_data = self.getIrSensorData()
+				print ir_data[1]
+			x=self.pixyObj.get_blocks()
+			
+		sleep(0.2)
+		print 'Reached dropoff location'
+		self.dropGift()
+		return True
+
+	def approachGift(self):
+		x = self.pixyObj.get_blocks()
+		ir_data = self.getIrSensorData()
+		
+        	while (x[2]<=GIFT_RIGHT or x[2]>=GIFT_LEFT) or (ir_data[1] >= GIFT_FAR or ir_data[1] <= GIFT_NEAR):
+			print 'Gift block ', x[2]
+			while x[2]<=GIFT_RIGHT:
+				print 'Right'
+				self.adjustRightTowardItem()
+				x=self.pixyObj.get_blocks()
+			while x[2]>=GIFT_LEFT:
+				print 'Left'
+				self.adjustLeftTowardItem()
+				x=self.pixyObj.get_blocks()
+			if ir_data[1] >= GIFT_FAR:
+				print 'Forward'
+				self.adjustForwardTowardItem()
+				#sleep(0.1)
+			#	ir_data = self.getIrSensorData()
+			#	print 'd=',ir_data[1]
+			elif ir_data[1] <= GIFT_NEAR:
+				print 'Back'
+				self.adjustBackwardTowardItem()
+				#sleep(0.1)
+			#	ir_data = self.getIrSensorData()
+			#	print 'd=',ir_data[1]
+			#sleep(0.2)
+			ir_data = self.getIrSensorData()
+			print 'd=',ir_data[1]
+			'''
+			if ir_data[1]>15 and ir_data[1]<30:
+				t=(ir_data[1]-15)/5.5
+				self.leftMotor.forward()
+				self.rightMotor.forward()
+				self.leftMotor.setSpeed(PWM_ADJUST)
+				self.rightMotor.setSpeed(PWM_ADJUST)
+                		sleep(t)
+		                self.stop()
+			'''
+			x=self.pixyObj.get_blocks()
+			
+		sleep(0.2)
+		print 'Reached pickup location'
+
+#		self.rightMotor.backward()
+#                self.rightMotor.setSpeed(PWM_ADJUST)
+#                sleep(0.01)
+#                self.stop()
+		
+		self.pickupGift()
+		return True
+
