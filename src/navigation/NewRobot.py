@@ -61,10 +61,13 @@ logger = []
 #Motor turning PWM
 ADJUST_MAX = 25
 ADJUST_MIN = 25
-PWM_ADJUST = 850
-ADJUST_LR_TIME=.02
-ADJUST_FB_TIME=.05
+PWM_ADJUST = 875
+ADJUST_LR_TIME=.007
+ADJUST_F_TIME=.03
+ADJUST_B_TIME=.1
 #Pixy
+# 0 is to the left of the robot
+# 160 is to the right
 SIG_TREE=1
 SIG_GIFT=2
 GIFT_RIGHT=90
@@ -75,7 +78,7 @@ TREE_LEFT=120
 GIFT_FAR=9
 GIFT_NEAR=8
 TREE_FAR=9
-TREE_NEAR=8
+TREE_NEAR=8.5
 
 class robot():
 
@@ -348,7 +351,7 @@ class robot():
 		self.rightMotor.forward()
 		self.leftMotor.setSpeed(PWM_ADJUST)
 		self.rightMotor.setSpeed(PWM_ADJUST)
-                sleep(ADJUST_FB_TIME)
+                sleep(ADJUST_F_TIME)
                 self.stop()
 	
 	def adjustBackwardTowardItem(self):
@@ -357,7 +360,7 @@ class robot():
 		self.rightMotor.backward()
 		self.leftMotor.setSpeed(PWM_ADJUST)
 		self.rightMotor.setSpeed(PWM_ADJUST)
-                sleep(ADJUST_FB_TIME)
+                sleep(ADJUST_B_TIME)
                 self.stop()
 
 	def pickupGift(self):
@@ -428,7 +431,7 @@ class robot():
 				self.adjustForwardTowardItem()
 				#sleep(0.1)
 			#	ir_data = self.getIrSensorData()
-			#	print 'd=',ir_data[1]
+			#	print 'd=',ir_data[0]
 			elif ir_data[1] <= GIFT_NEAR:
 				print 'Back'
 				self.adjustBackwardTowardItem()
