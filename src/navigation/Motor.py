@@ -1,5 +1,5 @@
 import wiringpi as wp
-
+from time import sleep
 wp.wiringPiSetupGpio()
 
 INPUT_MODE = 0
@@ -71,3 +71,22 @@ class motor():
 
 	def stop(self):
 		wp.pwmWrite(self.pwm, PWM_MIN)
+
+if __name__=="__main__":
+	leftMotorOutA=11
+	leftMotorOutB=9
+	leftPwm=13
+	rightMotorOutA=25
+	rightMotorOutB=8
+	rightPwm=12
+	PWM_ADJUST=770
+	leftMotor=motor(leftMotorOutA,leftMotorOutB,leftPwm)
+	rightMotor=motor(rightMotorOutA,rightMotorOutB,rightPwm)
+	leftMotor.forward()
+	rightMotor.forward()
+	leftMotor.setSpeed(PWM_ADJUST)
+	rightMotor.setSpeed(PWM_ADJUST)
+	sleep(1)
+	leftMotor.stop()
+	rightMotor.stop()
+	

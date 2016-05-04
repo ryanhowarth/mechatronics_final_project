@@ -37,5 +37,5 @@ class easy_pixy():
 if __name__=="__main__":
     x=easy_pixy()
     while 1:
-        x.get_blocks()
+        print x.get_blocks()
         time.sleep(0.5)

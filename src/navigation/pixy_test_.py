@@ -18,8 +18,18 @@ front_ir=2
 myClaw = Claw.claw(0,7)
 irSensor = ADS1x15(ic=0x00)
 
-def irDistLeft(volts):
-    return 11.721 * volts**(-0.972)
+#def irDistLeft(volts):
+#    return 11.721 * volts**(-0.972)
+
+def irDistLeft(volts,side):
+	if side=='F':
+		return 11.3 * volts**(-0.8959)
+	elif side=='L':
+		return 11.33 * volts**(-0.9558)
+	elif side=='R':
+		return 11.65 * volts**(-1.048)
+	else:
+		return 11.721 * volts**(-0.972)
 
 def pixyDetectItem():
     blocks = pixy_object.get_blocks()
@@ -38,7 +48,8 @@ def pixyApproach(item):
     x=pixy_object.get_blocks()
     if item=='tree':
         v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-        d = irDistLeft(v)
+#        d = irDistLeft(v)	
+        d = irDistLeft(v,'F')
         while (x[2]<=tree_right or x[2]>=tree_left) or (d>=tree_far or d<=tree_near):
             while x[2]<=tree_right:
                 print 'Right'
@@ -47,7 +58,8 @@ def pixyApproach(item):
                 print 'Left'
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-            d = irDistLeft(v)
+#            d = irDistLeft(v)
+	    d = irDistLeft(v,'F')
 #            print d
 #            if d<tree_far and d>tree_near:
 #                break
@@ -55,14 +67,16 @@ def pixyApproach(item):
                 print 'Forward'
                 sleep(0.25)
                 v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-                d = irDistLeft(v)
+#                d = irDistLeft(v)
+        	d = irDistLeft(v,'F')
                 print d
 
             while d<=tree_near:
                 print 'Back'
                 sleep(0.25)
                 v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-                d = irDistLeft(v)
+#                d = irDistLeft(v)
+        	d = irDistLeft(v,'F')
                 print d
             x=pixy_object.get_blocks()
         print 'Reached dropoff location'
@@ -70,7 +84,8 @@ def pixyApproach(item):
         return True
     elif item=='gift':
         v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-        d = irDistLeft(v)
+#        d = irDistLeft(v)
+        d = irDistLeft(v,'F')
         while (x[2]<=gift_right or x[2]>=gift_left) or (d<=gift_far or d>=gift_near):
             x=pixy_object.get_blocks()
             while x[2]<=gift_right:
@@ -80,7 +95,8 @@ def pixyApproach(item):
                 print 'Left'
                 x=pixy_object.get_blocks()
             v = irSensor.readADCSingleEnded(front_ir,4096,250)/1000
-            d = irDistLeft(v)
+#            d = irDistLeft(v)
+            d = irDistLeft(v,'F')
             print d
             if d<gift_far and d>gift_near:
                 break

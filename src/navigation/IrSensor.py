@@ -43,12 +43,15 @@ class irSensor():
 		return [finalDistL, finalDistM, finalDistR] 
 
 	def irDistLeft(self, volts):
-		return 10.189 * volts**(-0.969)
+	#	return 10.189 * volts**(-0.969)
+		return 11.3 * volts**(-0.9558)
 
 	def irDistMiddle(self, volts):
-		return 11.714 * volts**(-1.038)
+	#	return 11.714 * volts**(-1.038)
+		return 11.3 * volts**(-0.8959)
 
 	def irDistRight(self, volts):
-		return 9.6902 * volts**(-0.954)
+	#	return 9.6902 * volts**(-0.954)
+		return 11.65 * volts**(-1.048)
 
 
