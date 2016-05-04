@@ -57,7 +57,7 @@ THRESH = 17
 
 #Looks at IR Data and commands the robot.
 def process_ir_data():
-	irData = irSensors.getIrSensorData()
+	irData = irSensors.getIrSensorDataNavigation()
 	logger.info("irData: " + str(irData))
 
 	#If both the middle and right paths are blocked the robot turns left.

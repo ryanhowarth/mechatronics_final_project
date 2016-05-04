@@ -8,6 +8,11 @@ import time
 from pixy import easy_pixy_test
 import IrSensor
 
+#Threading stuff for spinning off irsensor thread
+import Queue
+from threading import Thread
+
+
 #logging modules
 import logging, coloredlogs
 
@@ -16,6 +21,9 @@ import logging, coloredlogs
 IR_LEFT = 0
 IR_MIDDLE = 1
 IR_RIGHT = 2
+NUM_IR_SAMPLES = 10
+
+
 
 PWM_MAX = 900
 PWM_MIN = 800
@@ -27,22 +35,17 @@ COUNT_TURN_RIGHT = 155
 TURNING_STOPPING_SPEED = 600
 
 #Default pwm values to go straight
-PWM_NOMINAL_LEFT = 822
+PWM_NOMINAL_LEFT = 814
 PWM_NOMINAL_RIGHT = 800
 #at higher speed (Not used right now)
 PWM_FAST_LEFT = 925
 PWM_FAST_RIGHT = 900
 
 
-#PID Gains
-P_GAIN = 6
-I_GAIN = 0.02
-D_GAIN = 0.1
-
-
 #Wall correction gains
-P_GAIN = 3
-D_GAIN = 3
+P_GAIN = 6
+I_GAIN = 1
+D_GAIN = 6
 PREVIOUS_CORRECTION_VALUE = 0
 
 
@@ -57,7 +60,7 @@ MIN_FRONT_WALL_THRESH = 7
 IDEAL_DIST_FROM_WALL = 11.5
 
 #Control Parameters
-loop_freq = 5.0
+loop_freq = 20
 
 
 #Objects
@@ -94,6 +97,7 @@ class robot():
 		self.logger = logging.getLogger('maze_run')
 		coloredlogs.install(level='DEBUG')
 		
+
 		#Create objects related to robot
 		self.logger.info('create robot')
 		self.leftMotor = Motor.motor(leftMotorOutA, leftMotorOutB, leftPwm)
@@ -105,6 +109,14 @@ class robot():
 		self.rightPid = pid_control.easy_PID(P_GAIN, I_GAIN, D_GAIN)
       		self.pixyObj = easy_pixy_test.easy_pixy()
 		self.PREVIOUS_CORRECTION_VALUE = 0
+		
+		#Spin off a thread to monitor irdata
+		self.q = Queue.LifoQueue()
+		irData2 = [0, 0, 0]
+		worker = Thread(target=self.work_thread, args=())
+    		worker.setDaemon(True)
+    		worker.start()
+		sleep(1)
 
 	def __del__(self):
 		self.logger.info('shut down robot')
@@ -116,12 +128,34 @@ class robot():
 		del self.encoders
 		del self.leftPid
 		del self.rightPid
+	@profile
+	def work_thread(self):
+		left_ir_data = [0]*NUM_IR_SAMPLES
+		middle_ir_data = [0]*NUM_IR_SAMPLES
+		right_ir_data = [0]*NUM_IR_SAMPLES
+    		avg_ir_data = [0, 0, 0]
+		while 1:
+			for i in range(0, NUM_IR_SAMPLES):
+				irData = self.getIrSensorData()
+				left_ir_data[i] = irData[IR_LEFT]
+				middle_ir_data[i] = irData[IR_MIDDLE]
+				right_ir_data[i] = irData[IR_RIGHT]
+				
+				avg_ir_data = [sum(left_ir_data)/NUM_IR_SAMPLES, sum(middle_ir_data)/NUM_IR_SAMPLES, sum(right_ir_data)/NUM_IR_SAMPLES]
+				self.q.put(avg_ir_data)
+			logger.info("avg_ir_data: " + str(avg_ir_data))
+	@profile
+	def test_thread(self):
+		while 1:
+			print "irdata: ", self.q.get()
+			sleep(1)
+
 #############################################################################
 ################# Top Level Functions Used by Navigation ####################
 #############################################################################	
 	#moves robot forward and the right wall disapears.
 	# does on the fly positional correction based on location of right wall.
-	@profile
+	#@profile
 	def moveForwardUntilNoWall(self):
 		
 		irData = self.getIrSensorData()
@@ -276,7 +310,7 @@ class robot():
 		#Send commands to motors
 		self.leftMotor.setSpeed(int(PWM_NOMINAL_LEFT - correction))
 		self.rightMotor.setSpeed(int(PWM_NOMINAL_RIGHT + correction))
-		self.logger.debug("CORRECT LEFT PWM_VALS: " +  str([PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]))
+		#self.logger.debug("CORRECT LEFT PWM_VALS: " +  str([PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]))
 	#slight correction to the right
 	#Calulates error exponetially
 	def correctRight(self, error):
@@ -288,7 +322,7 @@ class robot():
 		#Send to Motor
 		self.leftMotor.setSpeed(int(PWM_NOMINAL_LEFT + correction))
 		self.rightMotor.setSpeed(int(PWM_NOMINAL_RIGHT - correction))
-		self.logger.debug("CORRECT RIGHT PWM_VALS: " + str([PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]))
+		#self.logger.debug("CORRECT RIGHT PWM_VALS: " + str([PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]))
 	
 
 	#Checks if robot is going to hit front wall.
