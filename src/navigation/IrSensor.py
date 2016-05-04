@@ -17,14 +17,14 @@ class irSensor():
 
 	def __del__(self):
 		del self.sensor
-
+	@profile
 	def getIrSensorData(self):
 
 		distanceL = []
 		distanceM = []
 		distanceR = []
 
-		for i in xrange(10):
+		for i in xrange(1):
 			voltsL = self.sensor.readADCSingleEnded(IR_LEFT, IR_GAIN, IR_SPS)/1000
 			distanceL.append(self.irDistLeft(voltsL))
 
@@ -34,7 +34,7 @@ class irSensor():
 			voltsR = self.sensor.readADCSingleEnded(IR_RIGHT, IR_GAIN, IR_SPS)/1000
 			distanceR.append(self.irDistRight(voltsR))
 
-			sleep(.0025)
+			sleep(.001)
 
 		finalDistL = sum(distanceL)/len(distanceL)
 		finalDistM = sum(distanceM)/len(distanceM)

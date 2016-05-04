@@ -21,13 +21,13 @@ PWM_MAX = 900
 PWM_MIN = 800
 
 #Counts for stuff
-TURN_RADIUS_CORR_COUNT = 160
+TURN_RADIUS_CORR_COUNT = 180
 COUNT_TURN_LEFT = 155
 COUNT_TURN_RIGHT = 155
 TURNING_STOPPING_SPEED = 600
 
 #Default pwm values to go straight
-PWM_NOMINAL_LEFT = 832
+PWM_NOMINAL_LEFT = 822
 PWM_NOMINAL_RIGHT = 800
 #at higher speed (Not used right now)
 PWM_FAST_LEFT = 925
@@ -41,12 +41,19 @@ D_GAIN = 0.1
 
 
 #Wall correction gains
-L_GAIN = 2
-R_GAIN = 2
+P_GAIN = 3
+D_GAIN = 3
+PREVIOUS_CORRECTION_VALUE = 0
+
+
+
+
+
+
 #Wall Thresholds
 MAX_WALL_THRESH = 17
 #MIN_WALL_THRESH = 10
-MIN_FRONT_WALL_THRESH = 8
+MIN_FRONT_WALL_THRESH = 7
 IDEAL_DIST_FROM_WALL = 11.5
 
 #Control Parameters
@@ -97,7 +104,7 @@ class robot():
 		self.leftPid = pid_control.easy_PID(P_GAIN, I_GAIN, D_GAIN)
 		self.rightPid = pid_control.easy_PID(P_GAIN, I_GAIN, D_GAIN)
       		self.pixyObj = easy_pixy_test.easy_pixy()
-
+		self.PREVIOUS_CORRECTION_VALUE = 0
 
 	def __del__(self):
 		self.logger.info('shut down robot')
@@ -114,6 +121,7 @@ class robot():
 #############################################################################	
 	#moves robot forward and the right wall disapears.
 	# does on the fly positional correction based on location of right wall.
+	@profile
 	def moveForwardUntilNoWall(self):
 		
 		irData = self.getIrSensorData()
@@ -260,22 +268,26 @@ class robot():
 	#Calulates error exponetially
 	def correctLeft(self, error):
 		#Calculate correction differently based on distance away
-		if (error < 3):
-			correction = int(error * (L_GAIN + 10))
-		else:
-			correction = int((error * error) * L_GAIN)
-		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT - correction)
-		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT + correction)
+		correction = error * P_GAIN
+		correction += D_GAIN * (error - self.PREVIOUS_CORRECTION_VALUE)
+		self.PREVIOUS_CORRECTION_VALUE = error
+		self.logger.warn("CORRECTION LEFT: " + str(correction))
+		
+		#Send commands to motors
+		self.leftMotor.setSpeed(int(PWM_NOMINAL_LEFT - correction))
+		self.rightMotor.setSpeed(int(PWM_NOMINAL_RIGHT + correction))
 		self.logger.debug("CORRECT LEFT PWM_VALS: " +  str([PWM_NOMINAL_LEFT - correction, PWM_NOMINAL_RIGHT+ correction]))
 	#slight correction to the right
 	#Calulates error exponetially
 	def correctRight(self, error):
-		if (error < 3):
-			correction = int(error * (R_GAIN + 10))
-		else:
-			correction = int((error * error)*R_GAIN)
-		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT + correction)
-		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT - correction)
+		#Calculate the PID constants
+		correction = error * P_GAIN
+		correction += D_GAIN * (error - self.PREVIOUS_CORRECTION_VALUE)
+		self.PREVIOUS_CORRECTION_VALUE = error
+		self.logger.warn("CORRECTION RIGHT: " + str(correction))
+		#Send to Motor
+		self.leftMotor.setSpeed(int(PWM_NOMINAL_LEFT + correction))
+		self.rightMotor.setSpeed(int(PWM_NOMINAL_RIGHT - correction))
 		self.logger.debug("CORRECT RIGHT PWM_VALS: " + str([PWM_NOMINAL_LEFT + correction, PWM_NOMINAL_RIGHT- correction]))
 	
 

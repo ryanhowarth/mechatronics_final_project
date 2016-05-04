@@ -101,7 +101,8 @@ def process_ir_data():
 #robot.stop()
 #sleep(1)
 #robot.turnRight()
-	
+#robot.moveForward()
+#sleep(20)	
 case = 1
 try:
 	#Starting motions
