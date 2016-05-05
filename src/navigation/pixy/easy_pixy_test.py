@@ -33,6 +33,7 @@ class easy_pixy():
 	    for index in range (0, count):
 		if self.blocks[index].signature==1:# and self.blocks[index].x>80:
 	                return self.blocks[index].signature,self.blocks[index].x,self.blocks[index].y,self.blocks[index].width,self.blocks[index].height
+	    return 0,0,0,0,0
         else:
             #print 'No Blocks Found.'
             return 0,0,0,0,0
