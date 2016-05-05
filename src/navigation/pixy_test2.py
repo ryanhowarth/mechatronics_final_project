@@ -6,6 +6,7 @@ pixy_object = easy_pixy_test.easy_pixy()
 
 def pixyDetectItem():
     x = pixy_object.get_blocks()
+    print 'X coord', x[1]
     #print 'block: ' + str(x)
     if x[0]==1:
         return 'tree'

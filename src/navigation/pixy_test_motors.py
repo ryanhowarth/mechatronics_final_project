@@ -2,6 +2,11 @@
 import NewRobot
 from time import sleep
 
+def signal_handler(signal, frame):
+    print 'Exiting'
+    del robot
+    sys.exit(0)
+
 PWM_L = 13
 INPUT_1_LEFT = 11
 INPUT_2_LEFT = 9
@@ -15,18 +20,16 @@ SERVO_PINCH = 7
 
 myRobot = NewRobot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2_RIGHT, PWM_R, SERVO_LIFT, SERVO_PINCH)
 	
-flag=True
-while flag:
-  item=myRobot.detectItem()
-  print item
-  print item
-  if item=='gift':
-      pickedup=False
-      while not pickedup:
-        pickedup=myRobot.approachGift()
-      dropped=False
-      while not dropped:
-        if myRobot.detectItem()=='tree':
-          dropped=myRobot.approachTree()
-          flag=False
-  sleep(0.5)
+finished = False
+pickedup = False
+dropped = False
+while not finished:
+	item = myRobot.detectItem()
+	print item
+  	if item == 'gift':
+      		while not pickedup:
+        		pickedup = myRobot.approachGift()
+ 	if item == 'tree' and pickedup:
+      		while not dropped:
+          		dropped = myRobot.approachTree()
+		finished = True

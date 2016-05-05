@@ -1,9 +1,7 @@
-#!/usr/bin/python
-import mapping
 from time import sleep 
 from pixy import easy_pixy
 import NewRobot
-
+from threading import Thread
 import signal
 import sys
 import IrSensor
@@ -50,6 +48,8 @@ robot = NewRobot.robot(INPUT_1_LEFT, INPUT_2_LEFT, PWM_L, INPUT_1_RIGHT, INPUT_2
 sleep_time = 1.0
 THRESH = 17
 
+NUM_IR_SAMPLES = 10
+
 
 #########################################################################
 ################ Function that makes navigation decisions################
@@ -57,6 +57,10 @@ THRESH = 17
 
 #Looks at IR Data and commands the robot.
 def process_ir_data():
+	if robot.detectItem():
+		print 'dropped. exiting'
+		return True
+
 	irData = irSensors.getIrSensorDataNavigation()
 	logger.info("irData: " + str(irData))
 
@@ -95,8 +99,8 @@ def process_ir_data():
 			robot.moveForwardToFindRightWall()
 			sleep(sleep_time)
 		sleep(sleep_time)
-	
-	
+
+	return False
 #robot.turnLeft()
 #robot.stop()
 #sleep(1)
@@ -105,12 +109,19 @@ def process_ir_data():
 #sleep(20)	
 case = 1
 try:
+	'''
+	worker = Thread(target = irThread, args = ())
+	worker.setDaemon(True)
+	worker.start()
+	sleep(1)
+	'''
 	#Starting motions
 	robot.moveForwardUntilNoWall()
 	robot.moveForwardToClearTurnRadius()
 	#Run until ctrl-c
-	while 1:
-		process_ir_data()		
+	done = False
+	while not done:
+		done = process_ir_data()		
 finally:
 	robot.stop()
 

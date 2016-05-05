@@ -23,8 +23,6 @@ IR_MIDDLE = 1
 IR_RIGHT = 2
 NUM_IR_SAMPLES = 10
 
-
-
 PWM_MAX = 900
 PWM_MIN = 800
 
@@ -41,17 +39,12 @@ PWM_NOMINAL_RIGHT = 800
 PWM_FAST_LEFT = 925
 PWM_FAST_RIGHT = 900
 
-
+BACKWARD_TIME = 0.5
 #Wall correction gains
 P_GAIN = 6
 I_GAIN = 1
 D_GAIN = 6
-PREVIOUS_CORRECTION_VALUE = 0
-
-
-
-
-
+PREVIOUS_CORRECTION_VALUE = 0 
 
 #Wall Thresholds
 MAX_WALL_THRESH = 17
@@ -71,10 +64,10 @@ logger = []
 #Motor turning PWM
 ADJUST_MAX = 25
 ADJUST_MIN = 25
-PWM_ADJUST = 875
-ADJUST_LR_TIME=.007
-ADJUST_F_TIME=.03
-ADJUST_B_TIME=.1
+PWM_ADJUST = 860
+ADJUST_LR_TIME=.02
+ADJUST_F_TIME=.1
+ADJUST_B_TIME=.10
 #Pixy
 # 0 is to the left of the robot
 # 160 is to the right
@@ -85,10 +78,10 @@ GIFT_LEFT=115
 TREE_RIGHT=100
 TREE_LEFT=120
 #IR
-GIFT_FAR=9
-GIFT_NEAR=8.5
-TREE_FAR=9
-TREE_NEAR=8.5
+GIFT_FAR=13
+GIFT_NEAR=9
+TREE_FAR=11
+TREE_NEAR=9
 
 class robot():
 
@@ -109,14 +102,8 @@ class robot():
 		self.rightPid = pid_control.easy_PID(P_GAIN, I_GAIN, D_GAIN)
       		self.pixyObj = easy_pixy_test.easy_pixy()
 		self.PREVIOUS_CORRECTION_VALUE = 0
-		
-		#Spin off a thread to monitor irdata
-		self.q = Queue.LifoQueue()
-		irData2 = [0, 0, 0]
-		worker = Thread(target=self.work_thread, args=())
-    		worker.setDaemon(True)
-    		worker.start()
-		sleep(1)
+	
+		self.pickedup = False
 
 	def __del__(self):
 		self.logger.info('shut down robot')
@@ -128,27 +115,6 @@ class robot():
 		del self.encoders
 		del self.leftPid
 		del self.rightPid
-	@profile
-	def work_thread(self):
-		left_ir_data = [0]*NUM_IR_SAMPLES
-		middle_ir_data = [0]*NUM_IR_SAMPLES
-		right_ir_data = [0]*NUM_IR_SAMPLES
-    		avg_ir_data = [0, 0, 0]
-		while 1:
-			for i in range(0, NUM_IR_SAMPLES):
-				irData = self.getIrSensorData()
-				left_ir_data[i] = irData[IR_LEFT]
-				middle_ir_data[i] = irData[IR_MIDDLE]
-				right_ir_data[i] = irData[IR_RIGHT]
-				
-				avg_ir_data = [sum(left_ir_data)/NUM_IR_SAMPLES, sum(middle_ir_data)/NUM_IR_SAMPLES, sum(right_ir_data)/NUM_IR_SAMPLES]
-				self.q.put(avg_ir_data)
-			logger.info("avg_ir_data: " + str(avg_ir_data))
-	@profile
-	def test_thread(self):
-		while 1:
-			print "irdata: ", self.q.get()
-			sleep(1)
 
 #############################################################################
 ################# Top Level Functions Used by Navigation ####################
@@ -159,11 +125,12 @@ class robot():
 	def moveForwardUntilNoWall(self):
 		
 		irData = self.getIrSensorData()
-
+		#self.test_thread()
 		while irData[IR_RIGHT] < MAX_WALL_THRESH:
 			start_time = time.time() #Must always be first line in fuction.
 			irData = self.getIrSensorData()
-			self.logger.debug("irData: " + str(irData))
+			self.logger.debug("MOVE FORWARD irData: " + str(irData))
+			#self.test_thread()
 			if not self.checkFrontWall(irData):
 				return False
 			
@@ -180,7 +147,7 @@ class robot():
 	#could use left wall to do corrections at some point in futur
 	def moveForwardToFindRightWall(self):
 		irData = self.getIrSensorData()
-
+		
 		while irData[IR_RIGHT] > MAX_WALL_THRESH:
 			start_time = time.time() #Must always be first line in fuction.
 			
@@ -216,6 +183,17 @@ class robot():
 			
 			self.sleepToEndLoop(start_time)
 			self.correctToLeftWall(irData)
+		self.stop()
+
+	def moveBackward(self):
+		self.leftMotor.backward()
+		self.rightMotor.backward()
+
+		self.leftMotor.setSpeed(PWM_NOMINAL_LEFT)
+		self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT)
+		
+		sleep(BACKWARD_TIME)
+
 		self.stop()
 	
 	def turnLeft(self):
@@ -367,6 +345,7 @@ class robot():
 
 	def getIrSensorData(self):
 		return self.irSensors.getIrSensorData()
+		#return self.q.get()
 
 	# ----------------------- DELIVERY MECHANISM ------------------------
 	def adjustLeftTowardItem(self):
@@ -419,35 +398,41 @@ class robot():
 		blocks = self.pixyObj.get_blocks()
 		signature = blocks[0]
 		if signature == SIG_GIFT:
-			return 'gift'
-		elif signature == SIG_TREE:
-			return 'tree'
-        	
-		return ''
+			while not self.pickedup:
+				self.pickedup = self.approachGift()
+			self.leftMotor.forward()
+			self.rightMotor.backward()
+			
+			self.leftMotor.setSpeed(PWM_NOMINAL_LEFT)
+			self.rightMotor.setSpeed(PWM_NOMINAL_RIGHT)
+			sleep(0.1)
+			self.stop()
+		elif signature == SIG_TREE and self.pickedup:
+			dropped = False
+			while not dropped:
+				dropped = self.approachTree()
+			return True
+
+		return False
 
 	# Returns true if pickup or dropoff succesful
 	def approachTree(self):
 		x=self.pixyObj.get_blocks()
 		ir_data = self.getIrSensorData()
 		while (x[2] <= TREE_RIGHT or x[2] >= TREE_LEFT) or (ir_data[1] >= TREE_FAR or ir_data[1] <= TREE_NEAR):
-			print 'Tree block ', x[2]
+			print x[2]
 			while x[2]<=TREE_RIGHT:
-				print 'Right'
-				print x[2]
 				self.adjustRightTowardItem()
 				x=self.pixyObj.get_blocks()
 			while x[2]>=TREE_LEFT:
-				print 'Left'
-				print x[2]
 				self.adjustLeftTowardItem()
 				x=self.pixyObj.get_blocks()
 			if ir_data[1] >= TREE_FAR:
-				print 'Forward'
 				self.adjustForwardTowardItem()
                                 ir_data = self.getIrSensorData()
 				print ir_data[1]
 			elif ir_data[1] <= TREE_NEAR:
-				print 'Back'
+				#print 'Back'
 				self.adjustBackwardTowardItem()
 				ir_data = self.getIrSensorData()
 				print ir_data[1]
@@ -461,17 +446,25 @@ class robot():
 	def approachGift(self):
 		x = self.pixyObj.get_blocks()
 		ir_data = self.getIrSensorData()
-		
+		right_dis=False
         	while (x[2]<=GIFT_RIGHT or x[2]>=GIFT_LEFT) or (ir_data[1] >= GIFT_FAR or ir_data[1] <= GIFT_NEAR):
 			print 'Gift block ', x[2]
+			if ir_data[1]>=GIFT_NEAR and ir_data[1]<=GIFT_FAR:
+				right_dis=True
 			while x[2]<=GIFT_RIGHT:
 				print 'Right'
 				self.adjustRightTowardItem()
 				x=self.pixyObj.get_blocks()
+			#	ir_data = self.getIrSensorData()
+			#	print 'd=',ir_data[1]
 			while x[2]>=GIFT_LEFT:
 				print 'Left'
 				self.adjustLeftTowardItem()
 				x=self.pixyObj.get_blocks()
+			#	ir_data = self.getIrSensorData()
+			#	print 'd=',ir_data[1]
+			if right_dis:
+				break
 			if ir_data[1] >= GIFT_FAR:
 				print 'Forward'
 				self.adjustForwardTowardItem()
@@ -508,5 +501,15 @@ class robot():
 #                self.stop()
 		
 		self.pickupGift()
-		return True
+		'''
+		stillThere=self.detectItem()
+		if(stillThere=='gift'):
+			return False
+		'''
+		x = self.pixyObj.get_blocks()
+		
+		return not (x[0] == SIG_GIFT and x[1] > 60)
+
+	
+
 
