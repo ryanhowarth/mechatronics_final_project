@@ -27,9 +27,12 @@ class easy_pixy():
             self.frame = self.frame + 1
             for index in range (0, count):
 		if self.blocks[index].signature==2 and self.blocks[index].x>80:
-                    return self.blocks[index].signature,self.blocks[index].x,self.blocks[index].y,self.blocks[index].width,self.blocks[index].height
-	    else:
-		return self.blocks[index].signature,self.blocks[index].x,self.blocks[index].y,self.blocks[index].width,self.blocks[index].height
+			return self.blocks[index].signature,self.blocks[index].x,self.blocks[index].y,self.blocks[index].width,self.blocks[index].height
+#	    	elif self.blocks[index].signature==1 and self.blocks[index].x>80:
+#			return self.blocks[index].signature,self.blocks[index].x,self.blocks[index].y,self.blocks[index].width,self.blocks[index].height
+	    for index in range (0, count):
+		if self.blocks[index].signature==1:# and self.blocks[index].x>80:
+	                return self.blocks[index].signature,self.blocks[index].x,self.blocks[index].y,self.blocks[index].width,self.blocks[index].height
         else:
             #print 'No Blocks Found.'
             return 0,0,0,0,0
